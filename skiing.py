@@ -100,6 +100,7 @@ def plotRgb3dColorSpace(rgb_colors, title, ax):
     
 
 def investigateRgbObservations(episode):
+    # Get first and last state_action pair.
     first_state_action = episode[0]
     last_state_action = episode[len(episode)-1]
     
@@ -107,10 +108,12 @@ def investigateRgbObservations(episode):
     print("RGB Observation dimentions: ", first_state_action[0].shape)
     print("RGB Observation type: ", type(first_state_action[0]))
     print()
+    # Get all unique rgb colours seen in episode observations.
     episode_rgb_colors = getEpisodeColourSpace(episode)
     print("Numbers of unique colours in episode observations: ",len(episode_rgb_colors))
     print()
     
+    # Initilise figure with 2 sub plots and show image of first and last observations.
     fig1, axes = plt.subplots(1,2)
     axes[0].imshow(first_state_action[0],aspect='auto')
     axes[0].set_title("First Observation")
@@ -118,22 +121,28 @@ def investigateRgbObservations(episode):
     axes[1].set_title("Last Observation")
 
     fig2 = plt.figure()
-    # set up the axes for the first plot
+    # Set up the axes for the first 3d colour space plot.
     ax = fig2.add_subplot(1, 2, 1, projection='3d')
+    # Get unique rgb colours seen in first observation and plot 3d colour space.
     plotRgb3dColorSpace(getUniqueColourPixels(first_state_action),"First Observation Colour Space",ax)
+    # Get unique rgb colours seen in last observation and plot 3d colour space.
     ax = fig2.add_subplot(1, 2, 2, projection='3d')
+    # Set up the axes for the last 3d colour space plot.
     plotRgb3dColorSpace(getUniqueColourPixels(last_state_action),"Last Observation Colour Space",ax)
     
+    # Plot 3d colour space of unique rgb colors seen in the whole episode.  
     fig3 = plt.figure()
     ax = plt.axes(projection='3d')
     plotRgb3dColorSpace(episode_rgb_colors,"Episode Observation Colour Space", ax)
     
+    # Show all figures made. 
     plt.show()
 
 # Initilise skiing environment.
 skiing = skiing_env()
 # Initilise agent using environment.
 agent = agent(skiing)
+# Generate episode using agent.
 episode, reward = agent.generateEpisode()
 investigateRgbObservations(episode)
 
