@@ -51,14 +51,34 @@ class agent():
         env.close()
         return episode, sum_of_reward
 
-# Initilise skiing environment
+def getUniqueColourPixels(episode):
+    rgb_colors = {}
+    # Loop through state observations in episode. 
+    for observation in range(len(episode)):
+        # Get rgb pixels from state observation.
+        pixels = episode[observation][0]
+        for row in pixels:
+            for pixel in row:
+                # Add color to dictonary. Cannot use array as key so convert to tuple.
+                rgb_colors[pixel[0],pixel[1],pixel[2]]=pixel
+    return rgb_colors.keys()
+
+
+# Initilise skiing environment.
 skiing = skiing_env()
-# Initilise agent using environment
+# Initilise agent using environment.
 agent = agent(skiing)
-ep, reward = agent.generateEpisode()
-first_observation = ep[0][0]
+episode, reward = agent.generateEpisode()
+first_observation = episode[0][0]
 print()
 print("RGB Observation dimentions: ", first_observation.shape)
 print("RGB Observation type: ", type(first_observation))
 print()
+rgb_colors = getUniqueColourPixels(episode)
+print("Numbers of unique colours in episode observations: ",len(rgb_colors))
+print("Unique colours in episode observations: ",rgb_colors)
+print()
+
+
+
 
