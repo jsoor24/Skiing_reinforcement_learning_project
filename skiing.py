@@ -1,6 +1,7 @@
 import time
 import gym
 from gym.utils.play import play
+import matplotlib.pyplot as plt
 
 class skiing_env:
     
@@ -36,13 +37,16 @@ class agent():
 
     # Generates an episode. Returns trajectory containing list of tuples(observation,action,reward) 
     # and total reward collected by that episode
-    def generateEpisode(self):
+    def generateEpisode(self, render=False):
         env = self.env
         observation = env.reset()
         episode = []
         terminal = False
         sum_of_reward=0
         while not terminal:
+            # If been told to render, render before every action so user can see simulation. 
+            if(render):
+                env.render()
             action = self.policy(observation)
             n_observation, reward, terminal, info = env.step(action)
             sum_of_reward=sum_of_reward+reward
@@ -61,8 +65,28 @@ def getUniqueColourPixels(episode):
             for pixel in row:
                 # Add color to dictonary. Cannot use array as key so convert to tuple.
                 rgb_colors[pixel[0],pixel[1],pixel[2]]=pixel
-    return rgb_colors.keys()
+    return rgb_colors.values()
 
+def plot3dColorSpace(rgb_colors):
+    ax = plt.axes(projection='3d')
+    x = []
+    y = []
+    z = []
+    cs = []
+    for color in rgb_colors:
+        print(color)
+        x.append(color[0])
+        y.append(color[1])
+        z.append(color[2])
+        c = (color[0] / 255, color[1] / 255, color[2] / 255)
+        cs.append(c)
+        ax.text(color[0],color[1],color[2],color,color=c)
+    ax.scatter(x,y,z,c=cs)
+    plt.title("Skiing 3D Color Space")
+    ax.set_xlabel('R axis')
+    ax.set_ylabel('G axis')
+    ax.set_zlabel('B axis')
+    plt.show()
 
 # Initilise skiing environment.
 skiing = skiing_env()
@@ -76,7 +100,7 @@ print("RGB Observation type: ", type(first_observation))
 print()
 rgb_colors = getUniqueColourPixels(episode)
 print("Numbers of unique colours in episode observations: ",len(rgb_colors))
-print("Unique colours in episode observations: ",rgb_colors)
+plot3dColorSpace(rgb_colors)
 print()
 
 
