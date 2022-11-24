@@ -1,5 +1,6 @@
 import time
 import gym
+import random
 from gym.utils.play import play
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -35,6 +36,71 @@ class agent():
         possible_actions = self.env.action_space
         # Return random action
         return possible_actions.sample()
+
+    def getObjectColourCategory(self, pixel):
+        if pixel == (214,92,92):
+            return 'player'
+        elif pixel in [(66,72,200),(184,50,50)]:
+            return 'pole'
+        elif pixel in [(158,208,101),(72,160,72),(110,156,66),(82,126,45)]:
+            return 'tree'
+        else: return None
+    
+    # Fetches all object pixels
+    def identifyObjectPixels(self,observation):
+        player_pixels = {}
+        pole_pixels = {}
+        tree_pixels = {}
+        for row in range(len(observation)):
+            for col in range(len(observation[row])):
+                pixel = observation[row][col]
+                # Convert to tuple for comparison
+                pixel = (pixel[0],pixel[1],pixel[2])
+                pixel_type = self.getObjectColourCategory(pixel)
+                if pixel_type == 'player':
+                    player_pixels[row,col]=pixel
+                elif pixel_type == 'pole':
+                    pole_pixels[row,col]=pixel
+                elif pixel_type == 'tree':
+                    tree_pixels[row,col]=pixel
+        return player_pixels, pole_pixels, tree_pixels
+
+
+    def findAdjacentPixelsRecursively(self, pixel_dict, row, col, object_pixels, ob_type):
+        pixel = pixel_dict.pop((row,col),None)
+        pixel_type = self.getObjectColourCategory(pixel)
+        if pixel_type != ob_type:
+            return
+        else:
+            object_pixels[row,col]=pixel
+            self.findAdjacentPixelsRecursively(pixel_dict, row+1, col, object_pixels, ob_type)
+            self.findAdjacentPixelsRecursively(pixel_dict, row-1, col, object_pixels, ob_type)
+            self.findAdjacentPixelsRecursively(pixel_dict, row, col+1, object_pixels, ob_type)
+            self.findAdjacentPixelsRecursively(pixel_dict, row, col-1, object_pixels, ob_type)
+            
+
+    def identifyObjects(self, observation):
+        object_pixel_dicts = self.identifyObjectPixels(observation)
+        objects={}
+        object_pixels={}
+        for idx in range(len(object_pixel_dicts)):
+            pixel_dict = object_pixel_dicts[idx]
+            if idx==0:
+                ob_type = 'player'
+            elif idx==1:
+                ob_type = 'pole'
+            elif idx==2:
+                ob_type = 'tree'
+            ob_list = objects.setdefault(ob_type,[]) 
+            while(len(pixel_dict)>0):
+                # Getting first key in dictionary
+                (row,col) = next(iter(pixel_dict))
+                self.findAdjacentPixelsRecursively(pixel_dict, row, col, object_pixels, ob_type)
+                ob_list.append(object_pixels)
+                object_pixels={}
+        return objects
+
+            
 
     # Generates an episode. Returns trajectory containing list of tuples(observation,action,reward) 
     # and total reward collected by that episode
@@ -138,14 +204,32 @@ def investigateRgbObservations(episode):
     # Show all figures made. 
     plt.show()
 
+def testObjectDetectionAux(objects):
+    print()
+    for obs in ['player','pole','tree']:
+        print(obs," objects detected: ",len(objects.get(obs,None)))
+    print()
+
+def testObjectDetection(episode):
+    for i in range(3):
+        ep = episode[random.randint(0, len(episode)-1)]
+        plotObservationImage(ep)
+        objects = agent.identifyObjects(ep[0])
+        testObjectDetectionAux(objects)
+        plt.show()
+
+    final = episode.pop()
+    plotObservationImage(final)
+    objects = agent.identifyObjects(final[0])
+    testObjectDetectionAux(objects)
+    plt.show()
+
+
 # Initilise skiing environment.
 skiing = skiing_env()
 # Initilise agent using environment.
 agent = agent(skiing)
 # Generate episode using agent.
 episode, reward = agent.generateEpisode()
-investigateRgbObservations(episode)
-
-
-
-
+testObjectDetection(episode)
+#investigateRgbObservations(episode)
