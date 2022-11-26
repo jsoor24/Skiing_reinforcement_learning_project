@@ -82,12 +82,11 @@ class agent():
     def identifyObjects(self, observation):
         object_pixel_dicts = self.identifyObjectPixels(observation)
         objects={}
+        objects['player']=[object_pixel_dicts[0]]
         object_pixels={}
-        for idx in range(len(object_pixel_dicts)):
+        for idx in range(1,len(object_pixel_dicts)):
             pixel_dict = object_pixel_dicts[idx]
-            if idx==0:
-                ob_type = 'player'
-            elif idx==1:
+            if idx==1:
                 ob_type = 'pole'
             elif idx==2:
                 ob_type = 'tree'
@@ -204,24 +203,42 @@ def investigateRgbObservations(episode):
     # Show all figures made. 
     plt.show()
 
-def testObjectDetectionAux(objects):
+def printNumberOfObjectsDetected(objects):
     print()
     for obs in ['player','pole','tree']:
         print(obs," objects detected: ",len(objects.get(obs,None)))
     print()
 
+def plot2Images(observation,ob_detect):
+    # Initilise figure with 2 sub plots and show image of first and last observations.
+    fig1, axes = plt.subplots(1,2)
+    axes[0].imshow(observation,aspect='auto')
+    axes[0].set_title("Observation Image")
+    axes[1].imshow(ob_detect,aspect='auto')
+    axes[1].set_title("Object Detection")
+
+def pixelDictTo2dRgbArray(pixel_dict):
+    object2dImage = [[[255,255,255] for j in range(160)] for i in range(250)]
+    for object_type in pixel_dict:
+        obs = pixel_dict.get(object_type)
+        for ob_pixels in obs:
+            for (row,col) in ob_pixels:
+                pixel = ob_pixels.get((row,col))
+                object2dImage[row][col]=[pixel[0],pixel[1],pixel[2]]
+    return object2dImage
+
 def testObjectDetection(episode):
     for i in range(3):
         ep = episode[random.randint(0, len(episode)-1)]
-        plotObservationImage(ep)
         objects = agent.identifyObjects(ep[0])
-        testObjectDetectionAux(objects)
+        printNumberOfObjectsDetected(objects)
+        plot2Images(ep[0], pixelDictTo2dRgbArray(objects))
         plt.show()
 
     final = episode.pop()
-    plotObservationImage(final)
     objects = agent.identifyObjects(final[0])
-    testObjectDetectionAux(objects)
+    printNumberOfObjectsDetected(objects)
+    plot2Images(final[0], pixelDictTo2dRgbArray(objects))
     plt.show()
 
 
