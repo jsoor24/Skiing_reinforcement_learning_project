@@ -16,7 +16,7 @@ class skiing_env():
     def playEnvironment(self):
         play(self.env)
 
-    # Runs environment using random policy, for visusal
+    # Runs environment using random policy, for visual
     def runEnvironment(self):
         env = self.env
         env.reset() # Reset the environment
@@ -126,7 +126,7 @@ def getUniqueColourPixels(observation_action):
     pixels = observation_action[0]
     for row in pixels:
         for pixel in row:
-            # Add color to dictonary. Cannot use array as key so convert to tuple.
+            # Add color to dictionary. Cannot use array as key so convert to tuple.
             rgb_colors[pixel[0],pixel[1],pixel[2]]=pixel
     return rgb_colors.values()
 
@@ -170,7 +170,7 @@ def investigateRgbObservations(episode):
     last_state_action = episode[len(episode)-1]
     
     print()
-    print("RGB Observation dimentions: ", first_state_action[0].shape)
+    print("RGB Observation dimensions: ", first_state_action[0].shape)
     print("RGB Observation type: ", type(first_state_action[0]))
     print()
     # Get all unique rgb colours seen in episode observations.
@@ -210,7 +210,7 @@ def printNumberOfObjectsDetected(objects):
     print()
 
 def plot2Images(observation,ob_detect):
-    # Initilise figure with 2 sub plots and show image of first and last observations.
+    # Initialise figure with 2 sub plots and show image of first and last observations.
     fig1, axes = plt.subplots(1,2)
     axes[0].imshow(observation,aspect='auto')
     axes[0].set_title("Observation Image")
@@ -242,9 +242,9 @@ def testObjectDetection(episode):
     plt.show()
 
 
-# Initilise skiing environment.
+# Initialise skiing environment.
 skiing = skiing_env()
-# Initilise agent using environment.
+# Initialise agent using environment.
 agent = agent(skiing)
 # Generate episode using agent.
 episode, reward = agent.generateEpisode()
