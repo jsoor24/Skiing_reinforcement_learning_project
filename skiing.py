@@ -1,20 +1,26 @@
 import time
 import gym
 import random
+import pygame
 from gym.utils.play import play
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-class skiing_env():
+class env():
     
-    def __init__(self, render_mode='human', obs_type='rgb'):
-        self.env=gym.make('Skiing-v4')
+    def __init__(self, env, render_mode='human', obs_type='rgb'):
+        self.env=self.makeEnv(env)
         self.env.render_mode=render_mode
         self.env.obs_type=obs_type
     
+    def makeEnv(self, env):
+        return gym.make(env)
+    
     # Human play environment
-    def playEnvironment(self):
-        play(self.env)
+    def playEnvironment(self, mapping):
+        if(mapping==None):
+            play(self.env)
+        else: play(self.env,keys_to_action=mapping)
 
     # Runs environment using random policy, for visusal
     def runEnvironment(self):
@@ -243,10 +249,12 @@ def testObjectDetection(episode):
 
 
 # Initilise skiing environment.
-skiing = skiing_env()
+mapping = {(pygame.K_LEFT,): 0, (pygame.K_RIGHT,): 1}
+skiing = env('CartPole-v1')
+skiing.playEnvironment(mapping)
 # Initilise agent using environment.
-agent = agent(skiing)
+#agent = agent(skiing)
 # Generate episode using agent.
-episode, reward = agent.generateEpisode()
-testObjectDetection(episode)
+#episode, reward = agent.generateEpisode()
 #investigateRgbObservations(episode)
+#testObjectDetection(episode)
