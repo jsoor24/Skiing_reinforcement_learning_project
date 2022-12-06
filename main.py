@@ -1,5 +1,5 @@
 from env import env
-from DQNAgent import DQNAgent
+from RandomAgent import RandomAgent
 import pygame
 
 def play():
@@ -9,7 +9,7 @@ def play():
 mapping = {(pygame.K_LEFT,): 0, (pygame.K_RIGHT,): 1}
 environment = env('CartPole-v1')
 # Initialise agent using environment.
-agent = DQNAgent(environment)
+agent = RandomAgent(environment)
 # Generate episode using agent.
 episode, reward = agent.generateEpisode()
 print(episode)

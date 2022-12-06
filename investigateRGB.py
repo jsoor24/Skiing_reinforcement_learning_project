@@ -1,5 +1,5 @@
 from env import env
-from DQNAgent import DQNAgent
+from RandomAgent import RandomAgent
 import matplotlib.pyplot as plt
 import random
 
@@ -126,7 +126,7 @@ def testObjectDetection(episode):
 # Initialise skiing environment.
 skiing = env('Skiing-v4')
 # Initialise agent using environment.
-agent = DQNAgent(skiing)
+agent = RandomAgent(skiing)
 # Generate episode using agent.
 episode, reward = agent.generateEpisode()
 investigateRgbObservations(episode)

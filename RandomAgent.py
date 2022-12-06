@@ -1,4 +1,4 @@
-class DQNAgent():
+class RandomAgent():
 
     def __init__(self, skiing):
         self.env = skiing.env

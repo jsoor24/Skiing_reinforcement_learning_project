@@ -5,7 +5,7 @@ import pygame
 from gym.utils.play import play
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-from DQNAgent import DQNAgent
+from RandomAgent import RandomAgent
 
 class env():
     
