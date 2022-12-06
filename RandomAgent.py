@@ -1,7 +1,7 @@
 class RandomAgent:
 
     def __init__(self, skiing):
-        self.env = skiing.Env
+        self.env = skiing.env
 
     def policy(self, observation):
         possible_actions = self.env.action_space
