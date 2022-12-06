@@ -8,7 +8,7 @@ class DQNAgent():
         # some code
         return
 
-    def generateEpisode(self, render = False):
+    def generateEpisode(self, render=False):
         # some code
         return
 
