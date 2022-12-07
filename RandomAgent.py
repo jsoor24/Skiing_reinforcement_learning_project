@@ -1,12 +1,18 @@
 class RandomAgent:
 
-    def __init__(self, skiing):
-        self.env = skiing.env
+    def __init__(self, env):
+        self.env = env.gym_env
 
     def policy(self, observation):
         possible_actions = self.env.action_space
         # Return random action
         return possible_actions.sample()
+
+    def test_model(self, ep_num):
+        episodes = []
+        for i in range(ep_num):
+            episodes.append(self.generateEpisode(0)[1])
+        return episodes
 
     # Generates an episode. Returns trajectory containing list of tuples(observation,action,reward) 
     # and total reward collected by that episode

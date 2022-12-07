@@ -6,9 +6,9 @@ from gym.utils.play import play
 class Env:
 
     def __init__(self, environment, render_mode='human', obs_type='rgb'):
-        self.env = self.makeEnv(environment)
-        self.env.render_mode = render_mode
-        self.env.obs_type = obs_type
+        self.gym_env = self.makeEnv(environment)
+        self.gym_env.render_mode = render_mode
+        self.gym_env.env.obs_type = obs_type
 
     def makeEnv(self, environment):
         return gym.make(environment)
@@ -16,13 +16,13 @@ class Env:
     # Human play environment
     def playEnvironment(self, mapping):
         if mapping is None:
-            play(self.env)
+            play(self.gym_env)
         else:
-            play(self.env, keys_to_action=mapping)
+            play(self.gym_env, keys_to_action=mapping)
 
     # Runs environment using random policy, for visual
     def runEnvironment(self):
-        environment = self.env
+        environment = self.gym_env
         environment.reset()  # Reset the environment
         termination = False
         while not termination:
