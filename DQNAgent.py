@@ -162,14 +162,34 @@ class DQNAgent:
         # Return sequential model of nn layers.
         return torch.nn.Sequential(*layers)
 
+    # Joe's original policy
+    # def policy(self, obs, epsilon):
+    #     actions = self.env.action_space
+    #     if(random.choices((True,False),(epsilon,1-epsilon))[0]):
+    #         return actions.sample()
+    #     with torch.no_grad():
+    #         q_values = self.q_action_values_nn(torch.from_numpy(obs).float())
+    #     Q,A = torch.max(q_values, dim=0)
+    #     return A.item()
+
+    # From blog policy
+    # def policy(self, obs, epsilon):
+    #     # We do not require gradient at this point, because this function will be used either
+    #     # during experience collection or during inference
+    #     with torch.no_grad():
+    #         Qp = self.q_action_values_nn(torch.from_numpy(obs).float())
+    #     Q,A = torch.max(Qp, axis=0)
+    #     A = A if torch.rand(1,).item() > epsilon else torch.randint(0,self.env.action_space.n,(1,))
+    #     return A.item()
+
+    # Jeev's rearranged blog policy
     def policy(self, obs, epsilon):
-        actions = self.env.action_space
-        if(random.choices((True,False),(epsilon,1-epsilon))[0]):
-            return actions.sample()
-        with torch.no_grad():
-            q_values = self.q_action_values_nn(torch.from_numpy(obs).float())
-        Q,A = torch.max(q_values, dim=0)
-        return A.item()
+        if torch.rand(1,).item() > epsilon:
+            with torch.no_grad():
+                Qp = self.q_action_values_nn(torch.from_numpy(obs).float())
+            Q, A = torch.max(Qp, axis=0)
+            return A.item()
+        return torch.randint(0, self.env.action_space.n, (1,)).item()
 
     def test_model(self, ep_num):
         episodes = []
