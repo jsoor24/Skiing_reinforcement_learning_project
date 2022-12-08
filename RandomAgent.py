@@ -12,7 +12,7 @@ class RandomAgent:
         episodes = []
         for i in range(ep_num):
             episodes.append(self.generateEpisode(0)[1])
-        return episodes
+        return sum(episodes)/len(episodes)
 
     # Generates an episode. Returns trajectory containing list of tuples(observation,action,reward) 
     # and total reward collected by that episode

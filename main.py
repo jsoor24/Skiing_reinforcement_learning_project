@@ -10,6 +10,7 @@ def play():
     environment.playEnvironment(mapping)
 
 def plotLearningGraphs(learning_stats):
+    print("Plotting graphs")
     for idx in range(len(learning_stats)):
         plt.plot(learning_stats[idx])
         if(idx==0):
