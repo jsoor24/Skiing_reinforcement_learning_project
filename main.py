@@ -2,7 +2,8 @@ from Env import Env
 from RandomAgent import RandomAgent
 from DQNAgent import DQNAgent
 import matplotlib.pyplot as plt
-import numpy
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 def play():
     mapping = {(pygame.K_LEFT,): 0, (pygame.K_RIGHT,): 1}
@@ -30,11 +31,11 @@ agent = RandomAgent(env)
 # Create DQN agent. 
 dqn_agent = DQNAgent(env=env, learning_rate=1e-3, sync_freq=5, replay_buffer_size=256)
 # Train agent. 
-learning_stats = dqn_agent.train(7000)
+learning_stats = dqn_agent.train(10000)
 print("Saving trained model")
 dqn_agent.save_trained_model("cartpole-dqn.pth")
 # Plot graphs
-#plotLearningGraphs(learning_stats)
+plotLearningGraphs(learning_stats)
 print()
 print("Average reward DQN Agent: ", dqn_agent.test_model(10))
 print("Average reward Random Agent: ", agent.test_model(10))
