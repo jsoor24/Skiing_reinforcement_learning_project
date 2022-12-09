@@ -8,10 +8,10 @@ class RandomAgent:
         # Return random action
         return possible_actions.sample()
 
-    def test_model(self, ep_num):
+    def test_model(self, ep_num, render=False):
         episodes = []
         for i in range(ep_num):
-            episodes.append(self.generateEpisode(0)[1])
+            episodes.append(self.generateEpisode(render)[1])
         return sum(episodes)/len(episodes)
 
     # Generates an episode. Returns trajectory containing list of tuples(observation,action,reward) 

@@ -191,10 +191,10 @@ class DQNAgent:
             return A.item()
         return torch.randint(0, self.env.action_space.n, (1,)).item()
 
-    def test_model(self, ep_num):
+    def test_model(self, ep_num, render=False):
         episodes = []
         for i in range(ep_num):
-            episodes.append(self.generateEpisode(0)[1])
+            episodes.append(self.generateEpisode(0, render)[1])
         return sum(episodes)/len(episodes)
 
     def generateEpisode(self, epsilon, render=False):
