@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 class RandomAgent:
 
     def __init__(self, env):
@@ -10,9 +12,10 @@ class RandomAgent:
 
     def test_model(self, ep_num, render=False):
         episodes = []
-        for i in range(ep_num):
+        for i in tqdm(range(ep_num)):
             episodes.append(self.generateEpisode(render)[1])
-        return sum(episodes)/len(episodes)
+        return episodes
+        # return sum(episodes)/len(episodes)
 
     # Generates an episode. Returns trajectory containing list of tuples(observation,action,reward) 
     # and total reward collected by that episode

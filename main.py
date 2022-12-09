@@ -27,16 +27,32 @@ def plotLearningGraphs(learning_stats):
 
 # Initialise skiing environment.
 env = Env('CartPole-v1')
+
 # Initialise agent using environment.
 agent = RandomAgent(env)
-# Create DQN agent. 
+
+# Create DQN agent.
 dqn_agent = DQNAgent(env=env, learning_rate=1e-3, sync_freq=5, replay_buffer_size=256)
-# Train agent. 
-learning_stats = dqn_agent.train(10000)
-print("Saving trained model")
-dqn_agent.save_trained_model("cartpole-dqn.pth")
+
+# Train agent.
+# learning_stats = dqn_agent.train(10000)
+# print("Saving trained model")
+# dqn_agent.save_trained_model("cartpole-dqn.pth")
+
+# Load the agent mode
+dqn_agent.load_pretrained_model("optimal-policy.pth")
+
 # Plot graphs
-plotLearningGraphs(learning_stats)
+# plotLearningGraphs(learning_stats)
 print()
-print("Average reward DQN Agent: ", dqn_agent.test_model(10))
-print("Average reward Random Agent: ", agent.test_model(10))
+dqn_avg_rew = dqn_agent.test_model(10000)
+rand_avg_rew = agent.test_model(10000)
+# print("Average reward DQN Agent: ", dqn_avg_rew)
+# print("Average reward Random Agent: ", rand_avg_rew)
+
+plt.plot(dqn_avg_rew)
+plt.ylabel("Total reward DQN agent")
+plt.show()
+plt.plot(rand_avg_rew)
+plt.ylabel("Total reward random agent")
+plt.show()

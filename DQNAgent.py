@@ -193,9 +193,10 @@ class DQNAgent:
 
     def test_model(self, ep_num, render=False):
         episodes = []
-        for i in range(ep_num):
+        for i in tqdm(range(ep_num)):
             episodes.append(self.generateEpisode(0, render)[1])
-        return sum(episodes)/len(episodes)
+        return episodes
+        # return sum(episodes)/len(episodes)
 
     def generateEpisode(self, epsilon, render=False):
         observation = self.env.reset()
