@@ -59,6 +59,12 @@ class DQNAgent:
         q,_ = torch.max(qp, axis=1)    
         return q
 
+    #def reward_function(states, actions, rewards):
+    #     if player vertical velocity == 0 then reward -=10 
+    #     if actions == 0 (NO OP) then reward -=10     
+    #     if player in horizontal flag space then reward +=10:
+    #           Need to test if flag horzontal distance is between flag range, e.g between +-25 
+
     def trainNNs(self, batch_size):
         states, actions, rewards, n_states = self.sample_from_replay_buffer(batch_size)
 
@@ -104,6 +110,9 @@ class DQNAgent:
             while not terminal:
                 ep_len+=1
                 action = self.policy(observation, epsilon)
+                action = self.policy(observation, epsilon)
+                # New state space, features instead of pixels, check Env.step()
+                # n_observation, reward, terminal, info = self.env.step(action, observation)
                 n_observation, reward, terminal, info = self.env.step(action)
                 # Collect experience by adding to replay buffer.
                 self.replay_buffer.append((observation, action, reward, n_observation))

@@ -12,14 +12,27 @@ class Env:
     
     # def reset():
     #     observation, terminal = self.gym_env.reset()
-    #     return self.features(observation), terminal
+    #     return self.features(None, observation), terminal
 
-    # def features():
+    # Function returns feature space:
+    #   Player horizontal speed
+    #   Player vertical speed
+    #   Flag horizontal distance
+    #   Flag vertical distance
+    # def features(p_observation, n_observation):
+    #       if p_observation is None:
+    #            Player horizontal speed = 0
+    #            Player vertical speed = 0
+    #       else: 
+    #           calculate_speeds(p_observation, n_observation)
+    #
+    #       calculate_flag_distances(n_observation)
+    #       return features
 
-
-    # def step():
+    
+    # def step(action, p_observation):
     #     n_observation, reward, terminal, info = self.gym_env.step(action)
-    #     return self.features(n_observation), reward, terminal, info
+    #     return self.features(p_observation, n_observation), reward, terminal, info
 
     def makeEnv(self, environment):
         return gym.make(environment)
