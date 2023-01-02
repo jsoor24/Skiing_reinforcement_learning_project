@@ -74,6 +74,8 @@ class DQNAgent:
 
         # Get next returns using target network
         next_q_values = self.get_q_next(n_states)
+        # Additional reward function
+        #rewards = reward_function(states, actions, rewards)
         target_returns = rewards + self.gamma * next_q_values
 
         # Update weights of main q_value network

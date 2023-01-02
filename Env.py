@@ -9,6 +9,17 @@ class Env:
         self.gym_env = self.makeEnv(environment)
         self.gym_env.render_mode = render_mode
         self.gym_env.env.obs_type = obs_type
+    
+    # def reset():
+    #     observation, terminal = self.gym_env.reset()
+    #     return self.features(observation), terminal
+
+    # def features():
+
+
+    # def step():
+    #     n_observation, reward, terminal, info = self.gym_env.step(action)
+    #     return self.features(n_observation), reward, terminal, info
 
     def makeEnv(self, environment):
         return gym.make(environment)
