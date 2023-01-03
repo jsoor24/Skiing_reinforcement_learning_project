@@ -3,6 +3,8 @@ from RandomAgent import RandomAgent
 from DQNAgent import DQNAgent
 import matplotlib.pyplot as plt
 import os
+import torch 
+
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 def play():
@@ -35,20 +37,20 @@ agent = RandomAgent(env)
 dqn_agent = DQNAgent(env=env, learning_rate=1e-3, sync_freq=5, replay_buffer_size=256)
 
 # Train agent.
-# learning_stats = dqn_agent.train(10000)
-# print("Saving trained model")
-# dqn_agent.save_trained_model("cartpole-dqn.pth")
+learning_stats = dqn_agent.train(10000)
+print("Saving trained model")
+dqn_agent.save_trained_model("cartpole-dqn.pth")
 
 # Load the agent mode
-dqn_agent.load_pretrained_model("optimal-policy.pth")
+#dqn_agent.load_pretrained_model("optimal-policy.pth")
 
 # Plot graphs
-# plotLearningGraphs(learning_stats)
+plotLearningGraphs(learning_stats)
 print()
 dqn_avg_rew = dqn_agent.test_model(10)
 rand_avg_rew = agent.test_model(10)
-# print("Average reward DQN Agent: ", dqn_avg_rew)
-# print("Average reward Random Agent: ", rand_avg_rew)
+print("Average reward DQN Agent: ", dqn_avg_rew)
+print("Average reward Random Agent: ", rand_avg_rew)
 
 plt.plot(dqn_avg_rew)
 plt.ylabel("Total reward DQN agent")
@@ -56,3 +58,8 @@ plt.show()
 plt.plot(rand_avg_rew)
 plt.ylabel("Total reward random agent")
 plt.show()
+
+print(torch.cuda.is_available())
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(device)
+print(torch.cuda.get_device_name(0))

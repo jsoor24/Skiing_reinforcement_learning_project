@@ -13,18 +13,22 @@ class DQNAgent:
         self.env=env.gym_env
         nn_layer_sizes = self.getLayerSizes()
 
+        # Cuda support added for gpu computation
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        print("PYTORCH USING",self.device, "FOR COMPUATATION")
+
         # create two NN networks, one for action-values, one for target action-values.
-        self.q_action_values_nn = self.build_nn(nn_layer_sizes)
-        self.q_target_values_nn = copy.deepcopy(self.q_action_values_nn)
+        self.q_action_values_nn = self.build_nn(nn_layer_sizes).to(self.device)
+        self.q_target_values_nn = copy.deepcopy(self.q_action_values_nn).to(self.device)
 
         # Get MSE loss function.
-        self.loss_fn = torch.nn.MSELoss()
+        self.loss_fn = torch.nn.MSELoss().to(self.device)
         # Get NN optimiser function.
         self.optimiser = torch.optim.Adam(self.q_action_values_nn.parameters(),lr=learning_rate)
 
         self.network_sync_freq = sync_freq
         self.network_sync_counter = 0
-        self.gamma = torch.tensor(0.95).float()
+        self.gamma = torch.tensor(0.95).float().to(self.device)
 
         # Initilise experience replay 
         self.replay_buffer = self.initiliseReplayBuffer(replay_buffer_size)
@@ -47,10 +51,10 @@ class DQNAgent:
         sample = random.sample(self.replay_buffer, int(sample_size))
         # Take each state, action, reward and n_state of each time step 
         # and put into individual lists
-        s = torch.tensor(numpy.array([exp[0] for exp in sample])).float()
-        a = torch.tensor(numpy.array([exp[1] for exp in sample])).float()
-        r = torch.tensor(numpy.array([exp[2] for exp in sample])).float()
-        n_s = torch.tensor(numpy.array([exp[3] for exp in sample])).float()   
+        s = torch.tensor(numpy.array([exp[0] for exp in sample])).float().to(self.device)
+        a = torch.tensor(numpy.array([exp[1] for exp in sample])).float().to(self.device)
+        r = torch.tensor(numpy.array([exp[2] for exp in sample])).float().to(self.device)
+        n_s = torch.tensor(numpy.array([exp[3] for exp in sample])).float().to(self.device)
         return s, a, r, n_s
 
     def get_q_next(self, states):
@@ -110,7 +114,6 @@ class DQNAgent:
             while not terminal:
                 ep_len+=1
                 action = self.policy(observation, epsilon)
-                action = self.policy(observation, epsilon)
                 # New state space, features instead of pixels, check Env.step()
                 # n_observation, reward, terminal, info = self.env.step(action, observation)
                 n_observation, reward, terminal, info = self.env.step(action)
@@ -162,16 +165,16 @@ class DQNAgent:
         # Loop through nn dimentions.
         for idx in range(len(nn_layer_sizes)-1):
             # Create nn layer of input and output size.
-            layer = torch.nn.Linear(nn_layer_sizes[idx],nn_layer_sizes[idx+1])
+            layer = torch.nn.Linear(nn_layer_sizes[idx],nn_layer_sizes[idx+1]).to(self.device)
             # If layer is not the last, then use tanH as activation function. 
             if(idx<len(nn_layer_sizes)-2):
-                act_function = torch.nn.Tanh()
+                act_function = torch.nn.Tanh().to(self.device)
             else:
-                act_function = torch.nn.Identity()
+                act_function = torch.nn.Identity().to(self.device)
             # Append layer then act_function to layer list.
             layers+=(layer,act_function)
         # Return sequential model of nn layers.
-        return torch.nn.Sequential(*layers)
+        return torch.nn.Sequential(*layers).to(self.device)
 
     # Joe's original policy
     # def policy(self, obs, epsilon):
@@ -197,7 +200,7 @@ class DQNAgent:
     def policy(self, obs, epsilon):
         if torch.rand(1,).item() > epsilon:
             with torch.no_grad():
-                Qp = self.q_action_values_nn(torch.from_numpy(obs).float())
+                Qp = self.q_action_values_nn(torch.from_numpy(obs).float().to(self.device))
             Q, A = torch.max(Qp, axis=0)
             return A.item()
         return torch.randint(0, self.env.action_space.n, (1,)).item()
