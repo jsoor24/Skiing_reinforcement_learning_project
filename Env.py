@@ -9,30 +9,38 @@ class Env:
         self.gym_env = self.makeEnv(environment)
         self.gym_env.render_mode = render_mode
         self.gym_env.env.obs_type = obs_type
+        self.number_of_features=4
     
-    # def reset():
-    #     observation, terminal = self.gym_env.reset()
-    #     return self.features(None, observation), terminal
+    # Function to test feature extraction of skiing while implementing 
+    def testFeatureExtraction(self):
+        
+        pass
+    
+    def reset(self):
+        observation, terminal = self.gym_env.reset()
+        return self.features(None, observation), terminal
+
+    def calculate_flag_distances(self, observation):
+        # Code to be implemented
+        pass
 
     # Function returns feature space:
     #   Player horizontal speed
     #   Player vertical speed
     #   Flag horizontal distance
     #   Flag vertical distance
-    # def features(p_observation, n_observation):
-    #       if p_observation is None:
-    #            Player horizontal speed = 0
-    #            Player vertical speed = 0
-    #       else: 
-    #           calculate_speeds(p_observation, n_observation)
-    #
-    #       calculate_flag_distances(n_observation)
-    #       return features
-
+    def features(self, p_observation, n_observation):
+        if p_observation is None:
+            player_hspeed = 0
+            player_vspeed = 0
+        else: 
+            player_hspeed, player_vspeed = self.calculate_speeds(p_observation, n_observation)
+        flag_h, flag_v = self.calculate_flag_distances(n_observation)
+        return player_hspeed, player_vspeed, flag_h, flag_v
     
-    # def step(action, p_observation):
-    #     n_observation, reward, terminal, info = self.gym_env.step(action)
-    #     return self.features(p_observation, n_observation), reward, terminal, info
+    def step(self, action, p_observation):
+        n_observation, reward, terminal, info = self.gym_env.step(action)
+        return self.features(p_observation, n_observation), reward, terminal, info
 
     def makeEnv(self, environment):
         return gym.make(environment)

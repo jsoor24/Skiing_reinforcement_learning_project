@@ -10,7 +10,7 @@ class DQNAgent:
     def __init__(self, env, learning_rate, sync_freq, replay_buffer_size):
         # Manual seed used when generating initial weights for nn. Used to ensure converging, not sure why! 
         torch.manual_seed(1234)
-        self.env=env.gym_env
+        self.env=env
         nn_layer_sizes = self.getLayerSizes()
 
         # Cuda support added for gpu computation
@@ -116,7 +116,7 @@ class DQNAgent:
                 action = self.policy(observation, epsilon)
                 # New state space, features instead of pixels, check Env.step()
                 # n_observation, reward, terminal, info = self.env.step(action, observation)
-                n_observation, reward, terminal, info = self.env.step(action)
+                n_observation, reward, terminal, info = self.env.step(action, observation)
                 # Collect experience by adding to replay buffer.
                 self.replay_buffer.append((observation, action, reward, n_observation))
 
@@ -148,15 +148,16 @@ class DQNAgent:
             terminal = False
             while not terminal:
                 action = self.policy(observation, epsilon=1)
-                n_observation, reward, terminal, info = self.env.step(action)
+                n_observation, reward, terminal, info = self.env.step(action, observation)
                 # Collect experience by adding to replay buffer
                 replay_buffer.append((observation, action, reward, n_observation))
                 observation = n_observation
         return replay_buffer
     
     def getLayerSizes(self):
-        ob_space = self.env.observation_space.shape[0]
-        action_space = self.env.action_space.n
+        # Need to get number of features from feature extraction part
+        ob_space = self.env.number_of_features
+        action_space = self.env.gym_env.action_space.n
         return ob_space, 64, action_space
     
     def build_nn(self, nn_layer_sizes):
@@ -203,7 +204,7 @@ class DQNAgent:
                 Qp = self.q_action_values_nn(torch.from_numpy(obs).float().to(self.device))
             Q, A = torch.max(Qp, axis=0)
             return A.item()
-        return torch.randint(0, self.env.action_space.n, (1,)).item()
+        return torch.randint(0, self.env.gym_env.action_space.n, (1,)).item()
 
     def test_model(self, ep_num, render=False):
         episodes = []
