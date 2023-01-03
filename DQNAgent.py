@@ -212,20 +212,3 @@ class DQNAgent:
             episodes.append(self.generateEpisode(0, render)[1])
         return episodes
         # return sum(episodes)/len(episodes)
-
-    def generateEpisode(self, epsilon, render=False):
-        observation = self.env.reset()
-        episode = []
-        terminal = False
-        sum_of_reward = 0
-        while not terminal:
-            # If been told to render, render before every action so user can see simulation.
-            if render:
-                self.env.render()
-            action = self.policy(observation, epsilon)
-            n_observation, reward, terminal, info = self.env.step(action)
-            sum_of_reward = sum_of_reward + reward
-            episode.append((observation, action, reward, n_observation))
-            observation = n_observation
-        self.env.close()
-        return episode, sum_of_reward
