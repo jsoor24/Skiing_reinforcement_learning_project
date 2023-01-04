@@ -65,7 +65,6 @@ class Env:
         x = round((first[1]+second[1])/2)
         return y,x
 
-
     # Function to get object center
     def getObjectCenter(self, pixels_dict):
         pixels = list(pixels_dict.items())
@@ -85,7 +84,6 @@ class Env:
             objects[ob_type]=[self.getObjectCenter(object) for object in object_list]
         return objects
 
-    # self.getObjectCenter to be used here so we only store object centers instead of whole pixels. 
     def detectObjects(self, p_observation, n_observation):
         if p_observation is None:
             objects = self.identifyObjects(n_observation)
@@ -165,23 +163,27 @@ class Env:
                     tree_pixels[row, col] = pixel
         return player_pixels, pole_pixels, tree_pixels
 
-    def findAdjacentPixelsRecursively(self, pixel_dict, row, col, object_pixels, ob_type):
-        pixel = pixel_dict.pop((row, col), None)
-        pixel_type = self.getObjectColourCategory(pixel)
-        if pixel_type != ob_type:
+    def findAdjacentPixelsRecursively(self, pixel_dict, row, col, object_pixels, ob_type, player_dict):
+        ob_pixel = pixel_dict.pop((row, col), None)
+        player_pix = player_dict.pop((row, col), None)
+        pixel_type = self.getObjectColourCategory(ob_pixel)
+        if pixel_type != ob_type and player_pix is None:
             return
         else:
-            object_pixels[row, col] = pixel
-            self.findAdjacentPixelsRecursively(pixel_dict, row + 1, col, object_pixels, ob_type)
-            self.findAdjacentPixelsRecursively(pixel_dict, row - 1, col, object_pixels, ob_type)
-            self.findAdjacentPixelsRecursively(pixel_dict, row, col + 1, object_pixels, ob_type)
-            self.findAdjacentPixelsRecursively(pixel_dict, row, col - 1, object_pixels, ob_type)
+            if player_pix is None:
+                object_pixels[row, col] = ob_pixel
+            self.findAdjacentPixelsRecursively(pixel_dict, row + 1, col, object_pixels, ob_type, player_dict)
+            self.findAdjacentPixelsRecursively(pixel_dict, row - 1, col, object_pixels, ob_type, player_dict)
+            self.findAdjacentPixelsRecursively(pixel_dict, row, col + 1, object_pixels, ob_type, player_dict)
+            self.findAdjacentPixelsRecursively(pixel_dict, row, col - 1, object_pixels, ob_type, player_dict)
 
     def identifyObjects(self, observation):
         object_pixel_dicts = self.identifyObjectPixels(observation)
-        objects = {'player': [object_pixel_dicts[0]]}
+        player_dict = object_pixel_dicts[0]
+        objects = {'player': [player_dict]}
         object_pixels = {}
         for idx in range(1, len(object_pixel_dicts)):
+            # Append player dict to check for object seperation by player
             pixel_dict = object_pixel_dicts[idx]
             if idx == 1:
                 ob_type = 'pole'
@@ -191,7 +193,7 @@ class Env:
             while len(pixel_dict) > 0:
                 # Getting first key in dictionary
                 (row, col) = next(iter(pixel_dict))
-                self.findAdjacentPixelsRecursively(pixel_dict, row, col, object_pixels, ob_type)
+                self.findAdjacentPixelsRecursively(pixel_dict, row, col, object_pixels, ob_type, player_dict.copy())
                 ob_list.append(object_pixels)
                 object_pixels = {}
         return objects
