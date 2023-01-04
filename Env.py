@@ -3,7 +3,7 @@ import gym
 from gym.utils.play import play
 from RandomAgent import RandomAgent
 import matplotlib.pyplot as plt
-import random 
+import random
 
 
 class Env:
@@ -20,16 +20,18 @@ class Env:
         episode = RandomAgent(self).generateEpisode()
         states = random.choices(episode[0], k=10)
         count=1
+        p_state_obs = None
         for state in states:
-            state_obs = state[0]
+            n_state_obs = state[0]
             # Data structure of objects:
             # dict(object_type, list( dict( pixel_coord, rgb_value)))
-            features = self.features(None, state_obs)
+            features = self.features(p_state_obs, n_state_obs)
+            p_state_obs = n_state_obs
             print()
             print("Features for random state",count,":")
             print(features)
             print()
-            self.plot2Observation(state_obs)
+            self.plot2Observation(n_state_obs)
             count+=1
 
     def plot2Observation(self,observation):
@@ -41,9 +43,41 @@ class Env:
         observation, terminal = self.gym_env.reset()
         return self.features(None, observation), terminal
 
-    def calculate_player_speeds(self, p_obs_objects, n_obs_objects):
+    # Object coords:
+    # {'player': [(72, 12)],
+    # 'pole': [(67, 50), (67, 82), (171, 39), (171, 71)],
+    # 'tree': [(107, 150), (137, 136), (196, 145)]}
+
+    def calculate_player_velocities(self, p_obs_objects, n_obs_objects):
         # Code to be implemented
-        return 0,0
+        start_player_pos = p_obs_objects["player"][0]
+        end_player_pos = n_obs_objects["player"][0]
+        h_velocity = end_player_pos[1] - start_player_pos[1]
+
+        start_poles_pos = p_obs_objects["pole"]
+        end_poles_pos = n_obs_objects["pole"]
+        n_of_start_poles = len(start_poles_pos)
+        n_of_end_poles = len(end_poles_pos)
+
+        print("Poles in first obs ", start_poles_pos)
+        print("Poles in second obs", end_poles_pos)
+
+        # This should never happen
+        if n_of_start_poles != 4 and n_of_start_poles != 2 and n_of_end_poles != 4 and n_of_end_poles != 2:
+            print("ERROR: Unexpected number of poles in observation")
+            return 0, 0
+
+        # 4 scenarios can occur with the number of poles:
+        # (4, 4) 4 poles in each observation (check dist between any)
+        # (2, 2) 2 poles in each observation (check dist between any)
+        # (2, 4) 2 new poles in second observation (check dist between first poles in both observations)
+        # (4, 2) 2 poles no longer visible in second observation (check dist between 'third pole' and 'first pole')
+        if n_of_start_poles == 4 and n_of_end_poles == 2:
+            v_velocity = end_poles_pos[2][0] - start_poles_pos[0][0]
+        else:
+            v_velocity = end_poles_pos[0][0] - start_poles_pos[0][0]
+
+        return h_velocity, v_velocity
 
     def calculate_flag_distances(self, n_obs_objects):
         player_pos = n_obs_objects["player"][0]
@@ -76,8 +110,8 @@ class Env:
             c_pixel_cords.append(pixel[0][1]) 
         length = len(pixels)
         return round(sum(r_pixel_cords)/length),round(sum(c_pixel_cords)/length)
- 
-    # Function to change object pixels into center coordinates.  
+
+    # Function to change object pixels into center coordinates.
     # dict(object_type, list( (y,x) ))
     def objectsToObjectCoords(self, objects):
         for ob_type in objects:
@@ -85,7 +119,7 @@ class Env:
             objects[ob_type]=[self.getObjectCenter(object) for object in object_list]
         return objects
 
-    # self.getObjectCenter to be used here so we only store object centers instead of whole pixels. 
+    # self.getObjectCenter to be used here so we only store object centers instead of whole pixels.
     def detectObjects(self, p_observation, n_observation):
         if p_observation is None:
             objects = self.identifyObjects(n_observation)
@@ -96,19 +130,19 @@ class Env:
             return self.objectsToObjectCoords(p_obs), self.objectsToObjectCoords(n_obs)
 
     # Function returns feature space:
-    #   Player horizontal speed
-    #   Player vertical speed
+    #   Player horizontal velocity
+    #   Player vertical velocity
     #   Flag horizontal distance
     #   Flag vertical distance
     def features(self, p_observation, n_observation):
         p_obs_objects, n_obs_objects = self.detectObjects(p_observation, n_observation)
         if p_obs_objects is None:
-            player_hspeed = 0
-            player_vspeed = 0
+            h_velocity = 0
+            v_velocity = 0
         else: 
-            player_hspeed, player_vspeed = self.calculate_player_speeds(p_obs_objects, n_obs_objects)
+            h_velocity, v_velocity = self.calculate_player_velocities(p_obs_objects, n_obs_objects)
         flag_h, flag_v = self.calculate_flag_distances(n_obs_objects)
-        return player_hspeed, player_vspeed, flag_h, flag_v
+        return h_velocity, v_velocity, flag_h, flag_v
     
     # We are performing feature extraction on every step of expience, need to do this for states used for training only! 
     def step(self, action, p_observation):
