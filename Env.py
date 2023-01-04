@@ -23,7 +23,7 @@ class Env:
         for state in states:
             state_obs = state[0]
             # Data structure of objects:
-            # dict(object_type, list( dict( object occurance, dict( pixel_coord, rgb_value)))) 
+            # dict(object_type, list( dict( pixel_coord, rgb_value)))
             features = self.features(None, state_obs)
             print()
             print("Features for random state",count,":")
@@ -46,11 +46,11 @@ class Env:
         return 0,0
 
     def calculate_flag_distances(self, n_obs_objects):
-        player_pos = self.getObjectCenter(n_obs_objects["player"][0])
+        player_pos = n_obs_objects["player"][0]
         # Get position of flags which are below player
         poles = n_obs_objects["pole"]
         while len(poles)>0:
-            flags = self.getObjectCenter(poles.pop(0) | poles.pop(0))
+            flags = self.getFlagCenter(poles.pop(0), poles.pop(0))
             flag_h_pos=flags[1]-player_pos[1]
             flag_v_pos=flags[0]-player_pos[0]
             # Test if first flag set is next sub goal (not above player)
@@ -60,7 +60,13 @@ class Env:
                 return flag_h_pos, flag_v_pos
         print("ERROR - CANNOT DETECT POLE POSITION.")
 
-    # Function to get object center 
+    def getFlagCenter(self, first, second):
+        y = round((first[0]+second[0])/2)
+        x = round((first[1]+second[1])/2)
+        return y,x
+
+
+    # Function to get object center
     def getObjectCenter(self, pixels_dict):
         pixels = list(pixels_dict.items())
         r_pixel_cords = []
@@ -70,12 +76,24 @@ class Env:
             c_pixel_cords.append(pixel[0][1]) 
         length = len(pixels)
         return round(sum(r_pixel_cords)/length),round(sum(c_pixel_cords)/length)
+ 
+    # Function to change object pixels into center coordinates.  
+    # dict(object_type, list( (y,x) ))
+    def objectsToObjectCoords(self, objects):
+        for ob_type in objects:
+            object_list=objects[ob_type]
+            objects[ob_type]=[self.getObjectCenter(object) for object in object_list]
+        return objects
 
+    # self.getObjectCenter to be used here so we only store object centers instead of whole pixels. 
     def detectObjects(self, p_observation, n_observation):
         if p_observation is None:
-            return None, self.identifyObjects(n_observation)
+            objects = self.identifyObjects(n_observation)
+            return None, self.objectsToObjectCoords(objects)
         else:
-            return self.identifyObjects(p_observation), self.identifyObjects(n_observation)
+            p_obs = self.identifyObjects(p_observation)
+            n_obs = self.identifyObjects(n_observation)
+            return self.objectsToObjectCoords(p_obs), self.objectsToObjectCoords(n_obs)
 
     # Function returns feature space:
     #   Player horizontal speed
