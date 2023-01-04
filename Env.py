@@ -3,6 +3,7 @@ import gym
 from gym.utils.play import play
 from RandomAgent import RandomAgent
 import matplotlib.pyplot as plt
+import random 
 
 
 class Env:
@@ -17,13 +18,19 @@ class Env:
     def testFeatureExtraction(self):
         # Returns episode in data struct (list(trajectory), sum_reward) for testing
         episode = RandomAgent(self).generateEpisode()
-        initial_state = episode[0][0]
-        initial_state_obs = initial_state[0]
-        # Data structure of objects:
-        # dict(object_type, list( dict( object occurance, dict( pixel_coord, rgb_value)))) 
-        features = self.features(None, initial_state_obs)
-        print(features)
-        self.plot2Observation(initial_state_obs)
+        states = random.choices(episode[0], k=10)
+        count=1
+        for state in states:
+            state_obs = state[0]
+            # Data structure of objects:
+            # dict(object_type, list( dict( object occurance, dict( pixel_coord, rgb_value)))) 
+            features = self.features(None, state_obs)
+            print()
+            print("Features for random state",count,":")
+            print(features)
+            print()
+            self.plot2Observation(state_obs)
+            count+=1
 
     def plot2Observation(self,observation):
         plt.axis("on")
@@ -40,10 +47,18 @@ class Env:
 
     def calculate_flag_distances(self, n_obs_objects):
         player_pos = self.getObjectCenter(n_obs_objects["player"][0])
-        flags_pos = self.getObjectCenter(n_obs_objects["pole"][0] | n_obs_objects["pole"][1])
-        print("Player pos: ",player_pos)
-        print("Flags pos: ", flags_pos)
-        return flags_pos[1]-player_pos[1],flags_pos[0]-player_pos[0]
+        # Get position of flags which are below player
+        poles = n_obs_objects["pole"]
+        while len(poles)>0:
+            flags = self.getObjectCenter(poles.pop(0) | poles.pop(0))
+            flag_h_pos=flags[1]-player_pos[1]
+            flag_v_pos=flags[0]-player_pos[0]
+            # Test if first flag set is next sub goal (not above player)
+            if flag_v_pos>0:
+                print("Player pos: ",player_pos)
+                print("Flags pos: ", (flag_h_pos, flag_v_pos))
+                return flag_h_pos, flag_v_pos
+        print("ERROR - CANNOT DETECT POLE POSITION.")
 
     # Function to get object center 
     def getObjectCenter(self, pixels_dict):
