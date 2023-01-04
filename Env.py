@@ -56,7 +56,7 @@ class Env:
             # Test if first flag set is next sub goal (not above player)
             if flag_v_pos>0:
                 print("Player pos: ",player_pos)
-                print("Flags pos: ", (flag_h_pos, flag_v_pos))
+                print("Flags pos: ", flags)
                 return flag_h_pos, flag_v_pos
         print("ERROR - CANNOT DETECT POLE POSITION.")
 
