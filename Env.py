@@ -73,7 +73,6 @@ class Env:
     # 'tree': [(107, 150), (137, 136), (196, 145)]}
 
     def calculate_player_velocities(self, p_obs_objects, n_obs_objects):
-        # Code to be implemented
         start_player_pos = p_obs_objects["player"][0]
         end_player_pos = n_obs_objects["player"][0]
         h_velocity = end_player_pos[1] - start_player_pos[1]
@@ -81,12 +80,14 @@ class Env:
         start_poles_pos = p_obs_objects["pole"]
         end_poles_pos = n_obs_objects["pole"]
 
-        # Take care of scenario where 4 flags are disappearing from top of screen
-        # ignore flags above player
-        # play the game and double check
+        # Ignore poles that are above the player
+        # When they start to go off the top of the screen, their height value doesn't change
+        # so will give inaccurate velocities
+        start_poles = [pole for pole in start_poles_pos if pole[0] > start_player_pos[0]]
+        end_poles = [pole for pole in end_poles_pos if pole[0] > end_player_pos[0]]
 
-        n_of_start_poles = len(start_poles_pos)
-        n_of_end_poles = len(end_poles_pos)
+        n_of_start_poles = len(start_poles)
+        n_of_end_poles = len(end_poles)
 
         # This should never happen
         if n_of_start_poles != 4 and n_of_start_poles != 2:
@@ -105,9 +106,9 @@ class Env:
         # (2, 4) 2 new poles in second observation (check dist between first poles in both observations)
         # (4, 2) 2 poles no longer visible in second observation (check dist between 'third pole' and 'first pole')
         if n_of_start_poles == 4 and n_of_end_poles == 2:
-            v_velocity = end_poles_pos[0][0] - start_poles_pos[2][0]
+            v_velocity = start_poles[2][0] - end_poles[0][0]
         else:
-            v_velocity = end_poles_pos[0][0] - start_poles_pos[0][0]
+            v_velocity = start_poles[0][0] - end_poles[0][0]
 
         return h_velocity, v_velocity
 
