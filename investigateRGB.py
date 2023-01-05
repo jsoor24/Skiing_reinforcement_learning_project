@@ -117,19 +117,12 @@ def pixelDictTo2dRgbArray(pixel_dict):
     return object2dImage
 
 
-def testObjectDetection(episodeParameter):
-    for i in range(3):
-        ep = episodeParameter[random.randint(0, len(episodeParameter) - 1)]
-        objects = skiing.identifyObjects(ep[0])
+def testObjectDetection(episode):
+    for state in episode:
+        objects = skiing.identifyObjects(state[0])
         printNumberOfObjectsDetected(objects)
-        plot2Images(ep[0], pixelDictTo2dRgbArray(objects))
+        plot2Images(state[0], pixelDictTo2dRgbArray(objects))
         plt.show()
-
-    final = episodeParameter.pop()
-    objects = skiing.identifyObjects(final[0])
-    printNumberOfObjectsDetected(objects)
-    plot2Images(final[0], pixelDictTo2dRgbArray(objects))
-    plt.show()
 
 
 # Initialise skiing environment.
@@ -138,5 +131,5 @@ skiing = Env('Skiing-v4')
 agent = RandomAgent(skiing)
 # Generate episode using agent.
 episode, reward = agent.generateEpisode()
-investigateRgbObservations(episode)
+#investigateRgbObservations(episode)
 testObjectDetection(episode)
