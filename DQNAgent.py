@@ -110,18 +110,24 @@ class DQNAgent:
         # Enter loop with progress bar. 
         print("Progress:")
         for ep in tqdm(range(training_episodes)):
-            observation, terminal, sum_rewards, ep_len, losses = self.env.reset(), False, 0, 0, 0
+            p_features, p_objs, terminal = self.env.reset()
+            sum_rewards, ep_len, losses = 0, 0, 0
             while not terminal:
                 ep_len+=1
-                action = self.policy(observation, epsilon)
+                action = self.policy(p_features, epsilon)
                 # New state space, features instead of pixels, check Env.step()
                 # n_observation, reward, terminal, info = self.env.step(action, observation)
-                n_observation, reward, terminal, info = self.env.step(action, observation)
+
+                # return (h_velocity, v_velocity, flag_h, flag_v), n_obs_objects
+                # return self.features(p_obs_objs, n_observation), reward, terminal, info
+                n_features, p_objs, reward, terminal, info = self.env.step(action, p_objs)
+
                 # Collect experience by adding to replay buffer.
-                self.replay_buffer.append((observation, action, reward, n_observation))
+                self.replay_buffer.append((p_features, action, reward, n_features))
 
                 sum_rewards += reward
-                observation = n_observation
+                # observation = p_objs
+                p_features = n_features
                 buffer_idx += 1
 
                 # If capacity of replay buffer is half filled.
@@ -144,14 +150,13 @@ class DQNAgent:
     def initiliseReplayBuffer(self, replay_buffer_size):
         replay_buffer = deque(maxlen = replay_buffer_size)
         while(len(replay_buffer)<replay_buffer.maxlen):
-            observation = self.env.reset()
-            terminal = False
+            p_features, p_objs, terminal = self.env.reset()
             while not terminal:
-                action = self.policy(observation, epsilon=1)
-                n_observation, reward, terminal, info = self.env.step(action, observation)
+                action = self.policy(p_features, epsilon=1)
+                n_features, p_objs, reward, terminal, info = self.env.step(action, p_objs)
                 # Collect experience by adding to replay buffer
-                replay_buffer.append((observation, action, reward, n_observation))
-                observation = n_observation
+                replay_buffer.append((p_features, action, reward, n_features))
+                p_features = n_features
         return replay_buffer
     
     def getLayerSizes(self):

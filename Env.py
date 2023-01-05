@@ -97,8 +97,8 @@ class Env:
         plt.show()
 
     def reset(self):
-        observation, terminal = self.gym_env.reset()
-        return self.features(None, observation), terminal
+        observation = self.gym_env.reset()
+        return self.features(None, observation), False
 
     # Object coords:
     # {'player': [(72, 12)],
@@ -217,9 +217,9 @@ class Env:
     #   Player vertical velocity
     #   Flag horizontal distance
     #   Flag vertical distance
-    def features(self, p_observation, n_observation):
+    def features(self, p_obs_objects, n_observation):
         start_time = time.time()
-        p_obs_objects, n_obs_objects = self.detectObjects(p_observation, n_observation)
+        n_obs_objects = self.detectObjects(n_observation)
         #print("Object detection: --- %s seconds ---" % (time.time() - start_time))
         if p_obs_objects is None:
             h_velocity = 0
@@ -231,12 +231,13 @@ class Env:
         start_time = time.time()
         flag_h, flag_v = self.calculate_flag_distances(n_obs_objects)
         #print("Flag distance calculation: --- %s seconds ---" % (time.time() - start_time))
-        return h_velocity, v_velocity, flag_h, flag_v
+        return (h_velocity, v_velocity, flag_h, flag_v), n_obs_objects
 
-    # We are performing feature extraction on every step of experience, need to do this for states used for training only!
-    def step(self, action, p_observation):
+    # We are performing feature extraction on every step of experience
+    # need to do this for states used for training only!
+    def step(self, action, p_obs_objs):
         n_observation, reward, terminal, info = self.gym_env.step(action)
-        return self.features(p_observation, n_observation), reward, terminal, info
+        return self.features(p_obs_objs, n_observation), reward, terminal, info
 
     def makeEnv(self, environment):
         return gym.make(environment)
