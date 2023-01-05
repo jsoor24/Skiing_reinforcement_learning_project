@@ -96,10 +96,6 @@ class Env:
         plt.imshow(observation)
         plt.show()
 
-    def reset(self):
-        observation, terminal = self.gym_env.reset()
-        return self.features(None, observation), terminal
-
     # Object coords:
     # {'player': [(72, 12)],
     # 'pole': [(67, 50), (67, 82), (171, 39), (171, 71)],
@@ -113,6 +109,7 @@ class Env:
             fixed_v = max(poleA[0],poleB[0])
             corrected.append((fixed_v,poleA[1]))
             corrected.append((fixed_v,poleB[1]))
+        return corrected
         
 
     def calculate_player_velocities(self, p_obs_objects, n_obs_objects):
@@ -122,8 +119,8 @@ class Env:
         #print("Player end:",end_player_pos)
         h_velocity = end_player_pos[1] - start_player_pos[1]
 
-        start_poles_pos = p_obs_objects["pole"]
-        end_poles_pos = n_obs_objects["pole"]
+        start_poles_pos = self.fixPolePositions(p_obs_objects["pole"])
+        end_poles_pos = self.fixPolePositions(n_obs_objects["pole"])
 
         # Ignore poles that are above the player
         # When they start to go off the top of the screen, their height value doesn't change
@@ -178,7 +175,6 @@ class Env:
         x = round((first[1]+second[1])/2)
         return y,x
 
-
     # Function to get object centre from pixels
     def getObjectCentre(self, pixels_dict):
         pixels = list(pixels_dict.items())
@@ -197,6 +193,8 @@ class Env:
             # list( dict( pixel_coord, rgb_value))
             object_list=objects[ob_type]
             if ob_type=="player":
+                print("Player pixel list: ",list(object_list[0].keys()))
+                print()
                 objects[ob_type]=[list(object_list[0].keys())[0]]
             else:
                 objects[ob_type]=[self.getObjectCentre(object) for object in object_list]
@@ -233,9 +231,15 @@ class Env:
         #print("Flag distance calculation: --- %s seconds ---" % (time.time() - start_time))
         return h_velocity, v_velocity, flag_h, flag_v
 
+    def reset(self):
+        observation = self.gym_env.reset()
+        return self.features(None, observation)
+
     # We are performing feature extraction on every step of experience, need to do this for states used for training only!
     def step(self, action, p_observation):
         n_observation, reward, terminal, info = self.gym_env.step(action)
+        print("p obs: ",p_observation)
+        print("n obs: ",n_observation)
         return self.features(p_observation, n_observation), reward, terminal, info
 
     def makeEnv(self, environment):
