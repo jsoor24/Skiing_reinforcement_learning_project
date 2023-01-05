@@ -23,15 +23,15 @@ class Env:
         # states = random.choices(episode[0], k=10)
         # For x time steps at a time
         states = []
-        for i in range(0, 100, 10):
+        for i in range(100):
             states.append(episode[0][i])
-
-
         count=1
         p_state_obs = None
         prev_flag = []
         prev_pos = []
-        for state in states:
+
+        for idx in range(10,len(states),10):
+            state = states[idx]
             n_state_obs = state[0]
             # Data structure of objects:
             # dict(object_type, list( dict( pixel_coord, rgb_value)))
@@ -52,9 +52,16 @@ class Env:
             print("--------")
             print("Features for random state",count,":")
             print(features)
+            actions = []
+            for i in range (idx - 10, idx, 1):
+                action = states[i][1]
+                if action>0: 
+                    actions.append(states[i][1])
+            print("Action last 10 average: ",sum(actions)/len(actions))
+            print("Actions: ",actions)
             print()
 
-            self.plot2Observation(n_state_obs)
+            #self.plot2Observation(n_state_obs)
             p_state_obs = n_state_obs
             count+=1
 
@@ -147,8 +154,12 @@ class Env:
     # dict(object_type, list( (y,x) ))
     def objectsToObjectCoords(self, objects):
         for ob_type in objects:
+            # list( dict( pixel_coord, rgb_value))
             object_list=objects[ob_type]
-            objects[ob_type]=[self.getObjectCentre(object) for object in object_list]
+            if ob_type=="player":
+                objects[ob_type]=[list(object_list[0].keys())[0]]
+            else:
+                objects[ob_type]=[self.getObjectCentre(object) for object in object_list]
         return objects
 
     # Wrapper function to allow us to call with p = None
@@ -233,10 +244,6 @@ class Env:
 
     # Finds neighbouring pixels for one object
     # Given one blue dot for player identifies all player object pixels
-    def findAdjacentPixelsRecursively(self, pixel_dict, row, col, object_pixels, ob_type):
-        pixel = pixel_dict.pop((row, col), None)
-        pixel_type = self.getObjectColourCategory(pixel)
-        if pixel_type != ob_type:
     def findAdjacentPixelsRecursively(self, pixel_dict, row, col, object_pixels, ob_type, player_dict):
         ob_pixel = pixel_dict.pop((row, col), None)
         player_pix = player_dict.pop((row, col), None)
