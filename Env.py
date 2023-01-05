@@ -4,6 +4,7 @@ from gym.utils.play import play
 from RandomAgent import RandomAgent
 import matplotlib.pyplot as plt
 import random
+from tqdm import tqdm
 
 
 class Env:
@@ -13,6 +14,25 @@ class Env:
         self.gym_env.render_mode = render_mode
         self.gym_env.env.obs_type = obs_type
         self.number_of_features=4
+
+    def runFeatureExtraction(self):
+        # Returns episode in data struct (list(trajectory), sum_reward) for testing
+        episode = RandomAgent(self).generateEpisode()
+        print("Episode length: ", len(episode[0]))
+        features = []
+        p_obs=None
+        start_time = time.time()
+        count=0
+        for state in episode[0]:
+            n_obs = state[0]
+            self.plot2Observation(n_obs)
+            print()
+            features.append(self.features(p_obs, n_obs))  
+            p_obs = n_obs
+            print()
+            count+=1
+            if count == 10: break
+        print("--- %s seconds ---" % (time.time() - start_time))
 
     # Function to test feature extraction of skiing while implementing 
     def testFeatureExtraction(self):
@@ -82,6 +102,8 @@ class Env:
     def calculate_player_velocities(self, p_obs_objects, n_obs_objects):
         start_player_pos = p_obs_objects["player"][0]
         end_player_pos = n_obs_objects["player"][0]
+        print("Player start:",start_player_pos)
+        print("Player end:",end_player_pos)
         h_velocity = end_player_pos[1] - start_player_pos[1]
 
         start_poles_pos = p_obs_objects["pole"]
@@ -178,13 +200,19 @@ class Env:
     #   Flag horizontal distance
     #   Flag vertical distance
     def features(self, p_observation, n_observation):
+        start_time = time.time()
         p_obs_objects, n_obs_objects = self.detectObjects(p_observation, n_observation)
+        print("Object detection: --- %s seconds ---" % (time.time() - start_time))
         if p_obs_objects is None:
             h_velocity = 0
             v_velocity = 0
         else:
+            start_time = time.time()
             h_velocity, v_velocity = self.calculate_player_velocities(p_obs_objects, n_obs_objects)
+            print("Velocity calculation: --- %s seconds ---" % (time.time() - start_time))
+        start_time = time.time()
         flag_h, flag_v = self.calculate_flag_distances(n_obs_objects)
+        print("Flag distance calculation: --- %s seconds ---" % (time.time() - start_time))
         return h_velocity, v_velocity, flag_h, flag_v
 
     # We are performing feature extraction on every step of experience, need to do this for states used for training only!
@@ -216,10 +244,8 @@ class Env:
     def getObjectColourCategory(self, pixel):
         if pixel == (214, 92, 92):
             return 'player'
-        elif pixel in [(66, 72, 200), (184, 50, 50)]:
+        elif pixel == (66, 72, 200) or pixel ==(184, 50, 50):
             return 'pole'
-        elif pixel in [(158, 208, 101), (72, 160, 72), (110, 156, 66), (82, 126, 45)]:
-            return 'tree'
         else:
             return None
 
@@ -228,8 +254,8 @@ class Env:
         player_pixels = {}
         pole_pixels = {}
         tree_pixels = {}
-        for row in range(len(observation)):
-            for col in range(len(observation[row])):
+        for row in range(65,len(observation)):
+            for col in range(7,150):
                 pixel = observation[row][col]
                 # Convert to tuple for comparison
                 pixel = (pixel[0], pixel[1], pixel[2])
@@ -260,7 +286,9 @@ class Env:
 
     # Identifies objects from observation using pixel colour categories and populates dictionary
     def identifyObjects(self, observation):
+        start_time = time.time()
         object_pixel_dicts = self.identifyObjectPixels(observation)
+        print("identifyObjectPixels: --- %s seconds ---" % (time.time() - start_time))
         player_dict = object_pixel_dicts[0]
         objects = {'player': [player_dict]}
         object_pixels = {}

@@ -59,4 +59,5 @@ env = Env('Skiing-v4')
 # plt.ylabel("Total reward random agent")
 # plt.show()
 
-env.testFeatureExtraction()
+#env.testFeatureExtraction()
+env.runFeatureExtraction()
