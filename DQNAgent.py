@@ -110,7 +110,7 @@ class DQNAgent:
         # Enter loop with progress bar. 
         print("Progress:")
         for ep in tqdm(range(training_episodes)):
-            p_features, p_objs, terminal = self.env.reset()
+            (p_features, p_objs), terminal = self.env.reset()
             sum_rewards, ep_len, losses = 0, 0, 0
             while not terminal:
                 ep_len+=1
@@ -120,7 +120,7 @@ class DQNAgent:
 
                 # return (h_velocity, v_velocity, flag_h, flag_v), n_obs_objects
                 # return self.features(p_obs_objs, n_observation), reward, terminal, info
-                n_features, p_objs, reward, terminal, info = self.env.step(action, p_objs)
+                (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
 
                 # Collect experience by adding to replay buffer.
                 self.replay_buffer.append((p_features, action, reward, n_features))
@@ -150,10 +150,10 @@ class DQNAgent:
     def initiliseReplayBuffer(self, replay_buffer_size):
         replay_buffer = deque(maxlen = replay_buffer_size)
         while(len(replay_buffer)<replay_buffer.maxlen):
-            p_features, p_objs, terminal = self.env.reset()
+            (p_features, p_objs), terminal = self.env.reset()
             while not terminal:
                 action = self.policy(p_features, epsilon=1)
-                n_features, p_objs, reward, terminal, info = self.env.step(action, p_objs)
+                (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
                 # Collect experience by adding to replay buffer
                 replay_buffer.append((p_features, action, reward, n_features))
                 p_features = n_features
