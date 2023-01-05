@@ -59,5 +59,5 @@ plt.plot(rand_avg_rew)
 plt.ylabel("Total reward random agent")
 plt.show()
 
-# env.testFeatureExtraction()
-# env.runFeatureExtraction()
+#env.testFeatureExtraction()
+#env.runFeatureExtraction()

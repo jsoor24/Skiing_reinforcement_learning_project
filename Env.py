@@ -113,7 +113,8 @@ class Env:
             fixed_v = max(poleA[0],poleB[0])
             corrected.append((fixed_v,poleA[1]))
             corrected.append((fixed_v,poleB[1]))
-        
+        return corrected
+
 
     def calculate_player_velocities(self, p_obs_objects, n_obs_objects):
         start_player_pos = p_obs_objects["player"][0]
@@ -122,8 +123,8 @@ class Env:
         #print("Player end:",end_player_pos)
         h_velocity = end_player_pos[1] - start_player_pos[1]
 
-        start_poles_pos = p_obs_objects["pole"]
-        end_poles_pos = n_obs_objects["pole"]
+        start_poles_pos = self.fixPolePositions(p_obs_objects["pole"])
+        end_poles_pos = self.fixPolePositions(n_obs_objects["pole"])
 
         # Ignore poles that are above the player
         # When they start to go off the top of the screen, their height value doesn't change
@@ -178,7 +179,6 @@ class Env:
         x = round((first[1]+second[1])/2)
         return y,x
 
-
     # Function to get object centre from pixels
     def getObjectCentre(self, pixels_dict):
         pixels = list(pixels_dict.items())
@@ -197,6 +197,8 @@ class Env:
             # list( dict( pixel_coord, rgb_value))
             object_list=objects[ob_type]
             if ob_type=="player":
+                print("Player pixel list: ",list(object_list[0].keys()))
+                print()
                 objects[ob_type]=[list(object_list[0].keys())[0]]
             else:
                 objects[ob_type]=[self.getObjectCentre(object) for object in object_list]
