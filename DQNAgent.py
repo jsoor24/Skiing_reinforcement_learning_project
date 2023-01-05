@@ -5,17 +5,18 @@ from collections import deque
 import random
 from tqdm import tqdm
 
+
 class DQNAgent:
 
     def __init__(self, env, learning_rate, sync_freq, replay_buffer_size):
         # Manual seed used when generating initial weights for nn. Used to ensure converging, not sure why! 
         torch.manual_seed(1234)
-        self.env=env
+        self.env = env
         nn_layer_sizes = self.getLayerSizes()
 
         # Cuda support added for gpu computation
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        print("PYTORCH USING",self.device, "FOR COMPUATATION")
+        print("PYTORCH USING", self.device, "FOR COMPUATATION")
 
         # create two NN networks, one for action-values, one for target action-values.
         self.q_action_values_nn = self.build_nn(nn_layer_sizes).to(self.device)
@@ -24,7 +25,7 @@ class DQNAgent:
         # Get MSE loss function.
         self.loss_fn = torch.nn.MSELoss().to(self.device)
         # Get NN optimiser function.
-        self.optimiser = torch.optim.Adam(self.q_action_values_nn.parameters(),lr=learning_rate)
+        self.optimiser = torch.optim.Adam(self.q_action_values_nn.parameters(), lr=learning_rate)
 
         self.network_sync_freq = sync_freq
         self.network_sync_counter = 0
@@ -35,7 +36,7 @@ class DQNAgent:
         print()
         print("DQN Agent created ")
         return
-    
+
     def load_pretrained_model(self, model_path):
         self.q_action_values_nn.load_state_dict(torch.load(model_path))
 
@@ -45,9 +46,9 @@ class DQNAgent:
     def sample_from_replay_buffer(self, sample_size):
         # If requested sample size is less than replay_buffer size,
         # then set sample size equal to buffer size. This should not happen.
-        if(len(self.replay_buffer) < sample_size):
-            sample_size = len(self.experience_replay) 
-        # Get sample from replay buffer
+        if (len(self.replay_buffer) < sample_size):
+            sample_size = len(self.experience_replay)
+            # Get sample from replay buffer
         sample = random.sample(self.replay_buffer, int(sample_size))
         # Take each state, action, reward and n_state of each time step 
         # and put into individual lists
@@ -60,10 +61,10 @@ class DQNAgent:
     def get_q_next(self, states):
         with torch.no_grad():
             qp = self.q_target_values_nn(states)
-        q,_ = torch.max(qp, axis=1)    
+        q, _ = torch.max(qp, axis=1)
         return q
 
-    #def reward_function(states, actions, rewards):
+    # def reward_function(states, actions, rewards):
     #     if player vertical velocity == 0 then reward -=10 
     #     if actions == 0 (NO OP) then reward -=10     
     #     if player in horizontal flag space then reward +=10:
@@ -74,18 +75,18 @@ class DQNAgent:
 
         # Update target network if sync counter == sync frequency
         if (self.network_sync_counter == self.network_sync_freq):
-            self.network_sync_counter=0
+            self.network_sync_counter = 0
             # Load q value network parameters (weights) into q target value network
             self.q_target_values_nn.load_state_dict(self.q_action_values_nn.state_dict())
 
         # Predict return of states using main q_value network
         q_values = self.q_action_values_nn(states)
-        pred_max_q_values, _ = torch.max(q_values,axis=1)
+        pred_max_q_values, _ = torch.max(q_values, axis=1)
 
         # Get next returns using target network
         next_q_values = self.get_q_next(n_states)
         # Additional reward function
-        #rewards = reward_function(states, actions, rewards)
+        # rewards = reward_function(states, actions, rewards)
         target_returns = rewards + self.gamma * next_q_values
 
         # Update weights of main q_value network
@@ -93,8 +94,8 @@ class DQNAgent:
         self.optimiser.zero_grad()
         loss.backward(retain_graph=True)
         self.optimiser.step()
-        
-        self.network_sync_counter += 1       
+
+        self.network_sync_counter += 1
         return loss.item()
 
     def train(self, training_episodes):
@@ -104,16 +105,16 @@ class DQNAgent:
         epsilon = 1
         # Variable to test if replay buffer has been half filled. Set to half of capcity to begin with, 
         # so after first time-step, training begins.
-        buffer_idx = self.replay_buffer.maxlen/2
+        buffer_idx = self.replay_buffer.maxlen / 2
         # Lists for analysis of performance. 
-        losses_list, reward_list, episode_len_list, epsilon_list  = [], [], [], []
+        losses_list, reward_list, episode_len_list, epsilon_list = [], [], [], []
         # Enter loop with progress bar. 
         print("Progress:")
         for ep in tqdm(range(training_episodes)):
             (p_features, p_objs), terminal = self.env.reset()
             sum_rewards, ep_len, losses = 0, 0, 0
             while not terminal:
-                ep_len+=1
+                ep_len += 1
                 action = self.policy(p_features, epsilon)
                 # New state space, features instead of pixels, check Env.step()
                 # n_observation, reward, terminal, info = self.env.step(action, observation)
@@ -131,54 +132,62 @@ class DQNAgent:
                 buffer_idx += 1
 
                 # If capacity of replay buffer is half filled.
-                if(buffer_idx>(self.replay_buffer.maxlen/2)):
+                if (buffer_idx > (self.replay_buffer.maxlen / 2)):
                     buffer_idx = 0
                     for i in range(4):
-                        loss = self.trainNNs(batch_size=self.replay_buffer.maxlen/4)
-                        losses+=loss
+                        loss = self.trainNNs(batch_size=self.replay_buffer.maxlen / 4)
+                        losses += loss
             # As we explore, reduce exploration to exploitation.
-            if epsilon > 0.05 :
-                epsilon -= (1 / (training_episodes/2))
-            losses_list.append(losses/ep_len), reward_list.append(sum_rewards), episode_len_list.append(ep_len), epsilon_list.append(epsilon)
+            if epsilon > 0.05:
+                epsilon -= (1 / (training_episodes / 2))
+            losses_list.append(losses / ep_len), reward_list.append(sum_rewards), episode_len_list.append(
+                ep_len), epsilon_list.append(epsilon)
         self.env.close()
         print()
         print("TRAINING COMPLETED")
         return losses_list, reward_list, episode_len_list, epsilon_list
-        
 
     # Return replay buffer with random experience. 
     def initiliseReplayBuffer(self, replay_buffer_size):
-        replay_buffer = deque(maxlen = replay_buffer_size)
-        while(len(replay_buffer)<replay_buffer.maxlen):
+        replay_buffer = deque(maxlen=replay_buffer_size)
+        while (len(replay_buffer) < replay_buffer.maxlen):
             (p_features, p_objs), terminal = self.env.reset()
+            print("Objs from reset: ", p_objs)
+            i = 0
             while not terminal:
+                i += 1
                 action = self.policy(p_features, epsilon=1)
                 (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
+                print("Objs from step: ", p_objs)
                 # Collect experience by adding to replay buffer
                 replay_buffer.append((p_features, action, reward, n_features))
                 p_features = n_features
+
+                if i == 2:
+                    exit(0)
+
         return replay_buffer
-    
+
     def getLayerSizes(self):
         # Need to get number of features from feature extraction part
         ob_space = self.env.number_of_features
         action_space = self.env.gym_env.action_space.n
         return ob_space, 64, action_space
-    
+
     def build_nn(self, nn_layer_sizes):
         # Create list of nn layers and activation functions.
         layers = []
         # Loop through nn dimentions.
-        for idx in range(len(nn_layer_sizes)-1):
+        for idx in range(len(nn_layer_sizes) - 1):
             # Create nn layer of input and output size.
-            layer = torch.nn.Linear(nn_layer_sizes[idx],nn_layer_sizes[idx+1]).to(self.device)
+            layer = torch.nn.Linear(nn_layer_sizes[idx], nn_layer_sizes[idx + 1]).to(self.device)
             # If layer is not the last, then use tanH as activation function. 
-            if(idx<len(nn_layer_sizes)-2):
+            if (idx < len(nn_layer_sizes) - 2):
                 act_function = torch.nn.Tanh().to(self.device)
             else:
                 act_function = torch.nn.Identity().to(self.device)
             # Append layer then act_function to layer list.
-            layers+=(layer,act_function)
+            layers += (layer, act_function)
         # Return sequential model of nn layers.
         return torch.nn.Sequential(*layers).to(self.device)
 
@@ -204,7 +213,7 @@ class DQNAgent:
 
     # Jeev's rearranged blog policy
     def policy(self, obs, epsilon):
-        if torch.rand(1,).item() > epsilon:
+        if torch.rand(1, ).item() > epsilon:
             with torch.no_grad():
                 Qp = self.q_action_values_nn(torch.from_numpy(obs).float().to(self.device))
             Q, A = torch.max(Qp, axis=0)
