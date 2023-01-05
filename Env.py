@@ -17,19 +17,25 @@ class Env:
 
     def runFeatureExtraction(self):
         # Returns episode in data struct (list(trajectory), sum_reward) for testing
-        episode = RandomAgent(self).generateEpisode()
+        agent = RandomAgent(self)
+        eps_length = []
+        for i in range(10):
+            eps_length.append(len(agent.generateEpisode()[0]))
+        print("Average episode length:",sum(eps_length)/len(eps_length))
+        episode = agent.generateEpisode()
         print("Episode length: ", len(episode[0]))
         features = []
         p_obs=None
         start_time = time.time()
-        count=0
-        for state in episode[0]:
+        count=11
+        for idx in tqdm(range(len(episode[0])-1)):
+            state = episode[0][idx]           
             n_obs = state[0]
-            self.plot2Observation(n_obs)
-            print()
+            #self.plot2Observation(n_obs)
+            #print()
             features.append(self.features(p_obs, n_obs))  
             p_obs = n_obs
-            print()
+            #print()
             count+=1
             if count == 10: break
         print("--- %s seconds ---" % (time.time() - start_time))
@@ -99,11 +105,21 @@ class Env:
     # 'pole': [(67, 50), (67, 82), (171, 39), (171, 71)],
     # 'tree': [(107, 150), (137, 136), (196, 145)]}
 
+    def fixPolePositions(self, poles_list):
+        corrected = []
+        while len(poles_list)>0:
+            poleA =  poles_list.pop(0)
+            poleB =  poles_list.pop(0)
+            fixed_v = max(poleA[0],poleB[0])
+            corrected.append((fixed_v,poleA[1]))
+            corrected.append((fixed_v,poleB[1]))
+        
+
     def calculate_player_velocities(self, p_obs_objects, n_obs_objects):
         start_player_pos = p_obs_objects["player"][0]
         end_player_pos = n_obs_objects["player"][0]
-        print("Player start:",start_player_pos)
-        print("Player end:",end_player_pos)
+        #print("Player start:",start_player_pos)
+        #print("Player end:",end_player_pos)
         h_velocity = end_player_pos[1] - start_player_pos[1]
 
         start_poles_pos = p_obs_objects["pole"]
@@ -112,8 +128,8 @@ class Env:
         # Ignore poles that are above the player
         # When they start to go off the top of the screen, their height value doesn't change
         # so will give inaccurate velocities
-        start_poles = [pole for pole in start_poles_pos if pole[0] > start_player_pos[0]]
-        end_poles = [pole for pole in end_poles_pos if pole[0] > end_player_pos[0]]
+        start_poles = [pole for pole in start_poles_pos if pole[0] >= start_player_pos[0]]
+        end_poles = [pole for pole in end_poles_pos if pole[0] >= end_player_pos[0]]
 
         n_of_start_poles = len(start_poles)
         n_of_end_poles = len(end_poles)
@@ -122,11 +138,13 @@ class Env:
         if n_of_start_poles != 4 and n_of_start_poles != 2:
             print("ERROR: Unexpected number of poles in observation")
             print("Observed ", n_of_start_poles, " in first observation")
+            print(p_obs_objects)
             return 0, 0
 
         if n_of_end_poles != 4 and n_of_end_poles != 2:
             print("ERROR: Unexpected number of poles in observation")
             print("Observed ", n_of_end_poles, " in second observation")
+            print(n_obs_objects)
             return 0, 0
 
         # 4 scenarios can occur with the number of poles:
@@ -152,7 +170,7 @@ class Env:
             # Test if first flag set is next sub goal (not above player)
             if flag_v_pos>0:
                 return flag_h_pos, flag_v_pos
-        print("ERROR - CANNOT DETECT POLE POSITION.")
+        return 0,0
 
     # Get centre point between two flags
     def getFlagCentre(self, first, second):
@@ -202,17 +220,17 @@ class Env:
     def features(self, p_observation, n_observation):
         start_time = time.time()
         p_obs_objects, n_obs_objects = self.detectObjects(p_observation, n_observation)
-        print("Object detection: --- %s seconds ---" % (time.time() - start_time))
+        #print("Object detection: --- %s seconds ---" % (time.time() - start_time))
         if p_obs_objects is None:
             h_velocity = 0
             v_velocity = 0
         else:
             start_time = time.time()
             h_velocity, v_velocity = self.calculate_player_velocities(p_obs_objects, n_obs_objects)
-            print("Velocity calculation: --- %s seconds ---" % (time.time() - start_time))
+            #print("Velocity calculation: --- %s seconds ---" % (time.time() - start_time))
         start_time = time.time()
         flag_h, flag_v = self.calculate_flag_distances(n_obs_objects)
-        print("Flag distance calculation: --- %s seconds ---" % (time.time() - start_time))
+        #print("Flag distance calculation: --- %s seconds ---" % (time.time() - start_time))
         return h_velocity, v_velocity, flag_h, flag_v
 
     # We are performing feature extraction on every step of experience, need to do this for states used for training only!
@@ -246,6 +264,8 @@ class Env:
             return 'player'
         elif pixel == (66, 72, 200) or pixel ==(184, 50, 50):
             return 'pole'
+        #elif pixel in [(158, 208, 101), (72, 160, 72), (110, 156, 66), (82, 126, 45)]:
+        #    return 'tree'
         else:
             return None
 
@@ -286,9 +306,9 @@ class Env:
 
     # Identifies objects from observation using pixel colour categories and populates dictionary
     def identifyObjects(self, observation):
-        start_time = time.time()
+        #start_time = time.time()
         object_pixel_dicts = self.identifyObjectPixels(observation)
-        print("identifyObjectPixels: --- %s seconds ---" % (time.time() - start_time))
+        #print("identifyObjectPixels: --- %s seconds ---" % (time.time() - start_time))
         player_dict = object_pixel_dicts[0]
         objects = {'player': [player_dict]}
         object_pixels = {}
