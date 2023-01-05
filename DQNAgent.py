@@ -32,9 +32,11 @@ class DQNAgent:
         self.gamma = torch.tensor(0.95).float().to(self.device)
 
         # Initilise experience replay 
+        print("INTILISING REPLAY BUFFER")
         self.replay_buffer = self.initiliseReplayBuffer(replay_buffer_size)
+        print("REPLAY BUFFER FILLED")
         print()
-        print("DQN Agent created ")
+        print("DQN AGENT CREATED")
         return
 
     def load_pretrained_model(self, model_path):
@@ -142,7 +144,7 @@ class DQNAgent:
                 epsilon -= (1 / (training_episodes / 2))
             losses_list.append(losses / ep_len), reward_list.append(sum_rewards), episode_len_list.append(
                 ep_len), epsilon_list.append(epsilon)
-        self.env.close()
+        self.env.gym_env.close()
         print()
         print("TRAINING COMPLETED")
         return losses_list, reward_list, episode_len_list, epsilon_list
@@ -150,6 +152,7 @@ class DQNAgent:
     # Return replay buffer with random experience. 
     def initiliseReplayBuffer(self, replay_buffer_size):
         replay_buffer = deque(maxlen=replay_buffer_size)
+        count=1
         while (len(replay_buffer) < replay_buffer.maxlen):
             (p_features, p_objs), terminal = self.env.reset()
             while not terminal:
@@ -157,8 +160,11 @@ class DQNAgent:
                 (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
                 # Collect experience by adding to replay buffer
                 replay_buffer.append((p_features, action, reward, n_features))
+                print("Replay buffer experience added: ",count)
+                if len(replay_buffer)==replay_buffer.maxlen:
+                    break
+                count+=1
                 p_features = n_features
-
         return replay_buffer
 
     def getLayerSizes(self):
