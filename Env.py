@@ -203,14 +203,9 @@ class Env:
         return objects
 
     # Wrapper function to allow us to call with p = None
-    def detectObjects(self, p_observation, n_observation):
-        if p_observation is None:
-            objects = self.identifyObjects(n_observation)
-            return None, self.objectsToObjectCoords(objects)
-        else:
-            p_obs = self.identifyObjects(p_observation)
-            n_obs = self.identifyObjects(n_observation)
-            return self.objectsToObjectCoords(p_obs), self.objectsToObjectCoords(n_obs)
+    def detectObjects(self, n_observation):
+        n_obs = self.identifyObjects(n_observation)
+        return self.objectsToObjectCoords(n_obs)
 
     # Function returns feature space:
     #   Player horizontal velocity
