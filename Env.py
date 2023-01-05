@@ -213,7 +213,6 @@ class Env:
         n_obs_objects = self.detectObjects(n_observation)
         n_obs_objects_to_return = copy.deepcopy(n_obs_objects)
         n_obs_objects_for_dist = copy.deepcopy(n_obs_objects)
-        print("Objects detected from image: ", n_obs_objects)
         # print("Object detection: --- %s seconds ---" % (time.time() - start_time))
 
         if p_obs_objects is None:
@@ -228,7 +227,6 @@ class Env:
         flag_h, flag_v = self.calculate_flag_distances(n_obs_objects_for_dist)
 
         # print("Flag distance calculation: --- %s seconds ---" % (time.time() - start_time))
-        print("Objects detected to return: ", n_obs_objects_to_return)
         return (h_velocity, v_velocity, flag_h, flag_v), n_obs_objects_to_return
 
     # We are performing feature extraction on every step of experience

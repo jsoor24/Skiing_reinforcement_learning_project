@@ -152,19 +152,12 @@ class DQNAgent:
         replay_buffer = deque(maxlen=replay_buffer_size)
         while (len(replay_buffer) < replay_buffer.maxlen):
             (p_features, p_objs), terminal = self.env.reset()
-            print("Objs from reset: ", p_objs)
-            i = 0
             while not terminal:
-                i += 1
                 action = self.policy(p_features, epsilon=1)
                 (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
-                print("Objs from step: ", p_objs)
                 # Collect experience by adding to replay buffer
                 replay_buffer.append((p_features, action, reward, n_features))
                 p_features = n_features
-
-                if i == 2:
-                    exit(0)
 
         return replay_buffer
 
