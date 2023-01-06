@@ -15,6 +15,7 @@ class DQNAgent:
         nn_layer_sizes = self.getLayerSizes()
 
         # Cuda support added for gpu computation
+        print()
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         print("PYTORCH USING", self.device, "FOR COMPUATATION")
 
@@ -102,7 +103,7 @@ class DQNAgent:
 
     def train(self, training_episodes):
         print("")
-        print("DQN Agent: starting training")
+        print("DQN AGENT: STARTING TRAINING")
         print("")
         epsilon = 1
         # Variable to test if replay buffer has been half filled. Set to half of capcity to begin with, 
@@ -144,6 +145,7 @@ class DQNAgent:
                 epsilon -= (1 / (training_episodes / 2))
             losses_list.append(losses / ep_len), reward_list.append(sum_rewards), episode_len_list.append(
                 ep_len), epsilon_list.append(epsilon)
+            print("Episode length:",ep_len)
         self.env.gym_env.close()
         print()
         print("TRAINING COMPLETED")
@@ -152,7 +154,6 @@ class DQNAgent:
     # Return replay buffer with random experience. 
     def initiliseReplayBuffer(self, replay_buffer_size):
         replay_buffer = deque(maxlen=replay_buffer_size)
-        count=1
         while (len(replay_buffer) < replay_buffer.maxlen):
             (p_features, p_objs), terminal = self.env.reset()
             while not terminal:
@@ -160,10 +161,8 @@ class DQNAgent:
                 (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
                 # Collect experience by adding to replay buffer
                 replay_buffer.append((p_features, action, reward, n_features))
-                print("Replay buffer experience added: ",count)
                 if len(replay_buffer)==replay_buffer.maxlen:
                     break
-                count+=1
                 p_features = n_features
         return replay_buffer
 
@@ -214,7 +213,7 @@ class DQNAgent:
     def policy(self, obs, epsilon):
         if torch.rand(1, ).item() > epsilon:
             with torch.no_grad():
-                Qp = self.q_action_values_nn(torch.from_numpy(obs).float().to(self.device))
+                Qp = self.q_action_values_nn(torch.from_numpy(numpy.asarray(obs)).float().to(self.device))
             Q, A = torch.max(Qp, axis=0)
             return A.item()
         return torch.randint(0, self.env.gym_env.action_space.n, (1,)).item()
@@ -225,3 +224,19 @@ class DQNAgent:
             episodes.append(self.generateEpisode(0, render)[1])
         return episodes
         # return sum(episodes)/len(episodes)
+
+    def generateEpisode(self, epsilon, render=False):
+        (p_features, p_objs), terminal = self.env.reset()
+        episode = []
+        sum_of_reward = 0
+        while not terminal:
+            # If been told to render, render before every action so user can see simulation.
+            if render:
+                self.env.render()
+            action = self.policy(p_features, epsilon)
+            (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
+            sum_of_reward = sum_of_reward + reward
+            episode.append((p_features, action, reward, n_features))
+            p_features = n_features
+        self.env.gym_env.close()
+        return episode, sum_of_reward

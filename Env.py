@@ -233,7 +233,12 @@ class Env:
     # need to do this for states used for training only!
     def step(self, action, p_obs_objs):
         n_observation, reward, terminal, info = self.gym_env.step(action)
-        return self.features(p_obs_objs, n_observation), reward, terminal, info
+        try:
+            return self.features(p_obs_objs, n_observation), reward, terminal, info
+        except: 
+            print(p_obs_objs)
+            self.plot2Observation(n_observation)
+            exit(0)
 
     def reset(self):
         observation = self.gym_env.reset()
