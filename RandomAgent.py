@@ -1,5 +1,6 @@
 from tqdm import tqdm
 
+
 class RandomAgent:
 
     def __init__(self, env):

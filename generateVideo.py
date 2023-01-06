@@ -22,4 +22,3 @@ dqn_agent.load_pretrained_model("optimal-policy.pth")
 print()
 print("Average reward DQN Agent: ", dqn_agent.test_model(1, True))
 # print("Average reward Random Agent: ", agent.test_model(10, True))
-

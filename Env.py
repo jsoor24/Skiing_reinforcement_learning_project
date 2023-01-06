@@ -9,6 +9,7 @@ import copy
 import traceback
 import matplotlib.image
 
+
 class Env:
 
     def __init__(self, environment, render_mode='human', obs_type='rgb'):
@@ -128,10 +129,10 @@ class Env:
         # Ignore poles that are above the player
         # When they start to go off the top of the screen, their height value doesn't change
         # so will give inaccurate velocities
-        if(len(start_poles_pos)==4 or len(end_poles_pos)==4):
+        if (len(start_poles_pos) == 4 or len(end_poles_pos) == 4):
             start_poles = [pole for pole in start_poles_pos if pole[0] >= start_player_pos[0]]
             end_poles = [pole for pole in end_poles_pos if pole[0] >= end_player_pos[0]]
-        else: 
+        else:
             start_poles = start_poles_pos
             end_poles = end_poles_pos
 
@@ -140,15 +141,15 @@ class Env:
 
         # This should never happen
         if n_of_start_poles != 4 and n_of_start_poles != 2:
-            print("Start poles:",start_poles)
-            print("End:",end_poles)
+            print("Start poles:", start_poles)
+            print("End:", end_poles)
             print("ERROR: Unexpected number of poles in observation")
             print("Observed ", n_of_start_poles, " in first observation")
             return 0, 0
 
         if n_of_end_poles != 4 and n_of_end_poles != 2:
-            print("Start poles:",start_poles)
-            print("End:",end_poles)
+            print("Start poles:", start_poles)
+            print("End:", end_poles)
             print("ERROR: Unexpected number of poles in observation")
             print("Observed ", n_of_end_poles, " in second observation")
             print(end_poles_pos)
@@ -211,8 +212,8 @@ class Env:
     # Wrapper function to allow us to call with p = None
     def detectObjects(self, n_observation):
         n_obs = self.identifyObjects(n_observation)
-        if(len(n_obs["pole"])==0):
-            print("Error no poles detected: ",n_obs)
+        if (len(n_obs["pole"]) == 0):
+            print("Error no poles detected: ", n_obs)
         return self.objectsToObjectCoords(n_obs)
 
     # Function returns feature space:
@@ -232,13 +233,13 @@ class Env:
             v_velocity = 0
         else:
             start_time = time.time()
-            try: 
+            try:
                 h_velocity, v_velocity = self.calculate_player_velocities(p_obs_objects, n_obs_objects)
             except Exception as e:
-                print("Previous object: ",p_obs_objects)
-                print("New object: ",n_obs_objects)
-                matplotlib.image.imsave('errorcase.png',n_observation)
-                print("Testing detectobjects:",self.detectObjects(n_observation))
+                print("Previous object: ", p_obs_objects)
+                print("New object: ", n_obs_objects)
+                matplotlib.image.imsave('errorcase.png', n_observation)
+                print("Testing detectobjects:", self.detectObjects(n_observation))
                 self.plot2Observation(n_observation)
                 traceback.print_exc()
                 exit(0)
@@ -255,7 +256,6 @@ class Env:
     def step(self, action, p_obs_objs):
         n_observation, reward, terminal, info = self.gym_env.step(action)
         return self.features(p_obs_objs, n_observation), reward, terminal, info
-    
 
     def reset(self):
         observation = self.gym_env.reset()

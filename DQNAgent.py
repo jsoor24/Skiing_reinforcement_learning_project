@@ -125,7 +125,7 @@ class DQNAgent:
                 # return (h_velocity, v_velocity, flag_h, flag_v), n_obs_objects
                 # return self.features(p_obs_objs, n_observation), reward, terminal, info
                 (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
-                #print("Features for state,",ep_len,":",n_features)
+                # print("Features for state,",ep_len,":",n_features)
 
                 adjusted_reward = self.credit_assignment(n_features, reward)
 
@@ -149,7 +149,7 @@ class DQNAgent:
             losses_list.append(losses / ep_len), reward_list.append(sum_rewards), episode_len_list.append(
                 ep_len), epsilon_list.append(epsilon)
             print()
-            print("Episode length:",ep_len)
+            print("Episode length:", ep_len)
         self.env.gym_env.close()
         print()
         print("TRAINING COMPLETED")
@@ -166,7 +166,7 @@ class DQNAgent:
                 adjusted_reward = self.credit_assignment(n_features, reward)
                 # Collect experience by adding to replay buffer
                 replay_buffer.append((p_features, action, adjusted_reward, n_features))
-                if len(replay_buffer)==replay_buffer.maxlen:
+                if len(replay_buffer) == replay_buffer.maxlen:
                     break
                 p_features = n_features
         return replay_buffer
@@ -186,7 +186,7 @@ class DQNAgent:
             adjusted_reward -= 10
 
         if -14 < h_dist < 14:
-            adjusted_reward += 50/v_dist
+            adjusted_reward += 50 / v_dist
 
         return adjusted_reward
 

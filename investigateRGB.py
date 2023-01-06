@@ -131,5 +131,5 @@ skiing = Env('Skiing-v4')
 agent = RandomAgent(skiing)
 # Generate episode using agent.
 episode, reward = agent.generateEpisode()
-#investigateRgbObservations(episode)
+# investigateRgbObservations(episode)
 testObjectDetection(episode)
