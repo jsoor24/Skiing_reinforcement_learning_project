@@ -101,7 +101,7 @@ class DQNAgent:
         self.network_sync_counter += 1
         return loss.item()
 
-    def train(self, training_episodes, decrease_epsilon=False):
+    def train(self, training_episodes, decrease_epsilon=True):
         print("")
         print("DQN AGENT: STARTING TRAINING")
         print("")
@@ -182,11 +182,14 @@ class DQNAgent:
         if h_vel < -2 or h_vel > 2:
             adjusted_reward -= 5
 
-        if v_vel is 0:
+        if v_vel == 0:
             adjusted_reward -= 10
 
         if -14 < h_dist < 14:
-            adjusted_reward += 50 / v_dist
+            if(v_dist!=0):
+                adjusted_reward += round(50 / v_dist)
+            else:
+                adjusted_reward += 50
 
         return adjusted_reward
 

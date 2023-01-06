@@ -60,8 +60,8 @@ dqn_agent.save_trained_model("skiing-dqn.pth")
 # Plot graphs
 plotLearningGraphs(learning_stats)
 print()
-dqn_avg_rew = dqn_agent.test_model(10)
-rand_avg_rew = agent.test_model(10)
+dqn_avg_rew = dqn_agent.test_model(2)
+rand_avg_rew = agent.test_model(2)
 print("Average reward DQN Agent: ", dqn_avg_rew)
 print("Average reward Random Agent: ", rand_avg_rew)
 
