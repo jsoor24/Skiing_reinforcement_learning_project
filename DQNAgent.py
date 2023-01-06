@@ -126,11 +126,14 @@ class DQNAgent:
                 # return self.features(p_obs_objs, n_observation), reward, terminal, info
                 (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
                 #print("Features for state,",ep_len,":",n_features)
-                # Collect experience by adding to replay buffer.
-                self.replay_buffer.append((p_features, action, reward, n_features))
 
-                sum_rewards += reward
+                adjusted_reward = self.credit_assignment(n_features, reward)
+
+                # Collect experience by adding to replay buffer.
+                self.replay_buffer.append((p_features, action, adjusted_reward, n_features))
+
                 # observation = p_objs
+                sum_rewards += reward
                 p_features = n_features
                 buffer_idx += 1
 
@@ -166,6 +169,25 @@ class DQNAgent:
                     break
                 p_features = n_features
         return replay_buffer
+
+    # if h vel is big -> negative rew
+    # if v vel is 0 -> negative rew
+    # if h dist to flag is +- 14 -> positive rew (from centre, +- 14 is the flag)
+    # ^ scale the positive reward by small v dist to flag is
+    def credit_assignment(self, features, reward):
+        adjusted_reward = reward
+        h_vel, v_vel, h_dist, v_dist = features
+
+        if h_vel < -2 or h_vel > 2:
+            adjusted_reward -= 5
+
+        if v_vel is 0:
+            adjusted_reward -= 10
+
+        if -14 < h_dist < 14:
+            adjusted_reward += 50/v_dist
+
+        return adjusted_reward
 
     def getLayerSizes(self):
         # Need to get number of features from feature extraction part
