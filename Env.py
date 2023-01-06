@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import random
 from tqdm import tqdm
 import copy
-
+import traceback
+import matplotlib.image
 
 class Env:
 
@@ -118,30 +119,39 @@ class Env:
         # print("Player start:",start_player_pos)
         # print("Player end:",end_player_pos)
         h_velocity = end_player_pos[1] - start_player_pos[1]
-
+        # print()
+        # print("Previous objects:",p_obs_objects)
+        # print("Next objects:",n_obs_objects)
         start_poles_pos = self.fixPolePositions(p_obs_objects["pole"])
         end_poles_pos = self.fixPolePositions(n_obs_objects["pole"])
 
         # Ignore poles that are above the player
         # When they start to go off the top of the screen, their height value doesn't change
         # so will give inaccurate velocities
-        start_poles = [pole for pole in start_poles_pos if pole[0] >= start_player_pos[0]]
-        end_poles = [pole for pole in end_poles_pos if pole[0] >= end_player_pos[0]]
+        if(len(start_poles_pos)==4 or len(end_poles_pos)==4):
+            start_poles = [pole for pole in start_poles_pos if pole[0] >= start_player_pos[0]]
+            end_poles = [pole for pole in end_poles_pos if pole[0] >= end_player_pos[0]]
+        else: 
+            start_poles = start_poles_pos
+            end_poles = end_poles_pos
 
         n_of_start_poles = len(start_poles)
         n_of_end_poles = len(end_poles)
 
         # This should never happen
         if n_of_start_poles != 4 and n_of_start_poles != 2:
+            print("Start poles:",start_poles)
+            print("End:",end_poles)
             print("ERROR: Unexpected number of poles in observation")
             print("Observed ", n_of_start_poles, " in first observation")
-            print(p_obs_objects)
             return 0, 0
 
         if n_of_end_poles != 4 and n_of_end_poles != 2:
+            print("Start poles:",start_poles)
+            print("End:",end_poles)
             print("ERROR: Unexpected number of poles in observation")
             print("Observed ", n_of_end_poles, " in second observation")
-            print(n_obs_objects)
+            print(end_poles_pos)
             return 0, 0
 
         # 4 scenarios can occur with the number of poles:
@@ -201,6 +211,8 @@ class Env:
     # Wrapper function to allow us to call with p = None
     def detectObjects(self, n_observation):
         n_obs = self.identifyObjects(n_observation)
+        if(len(n_obs["pole"])==0):
+            print("Error no poles detected: ",n_obs)
         return self.objectsToObjectCoords(n_obs)
 
     # Function returns feature space:
@@ -220,7 +232,16 @@ class Env:
             v_velocity = 0
         else:
             start_time = time.time()
-            h_velocity, v_velocity = self.calculate_player_velocities(p_obs_objects, n_obs_objects)
+            try: 
+                h_velocity, v_velocity = self.calculate_player_velocities(p_obs_objects, n_obs_objects)
+            except Exception as e:
+                print("Previous object: ",p_obs_objects)
+                print("New object: ",n_obs_objects)
+                matplotlib.image.imsave('errorcase.png',n_observation)
+                print("Testing detectobjects:",self.detectObjects(n_observation))
+                self.plot2Observation(n_observation)
+                traceback.print_exc()
+                exit(0)
             # print("Velocity calculation: --- %s seconds ---" % (time.time() - start_time))
 
         start_time = time.time()
@@ -233,12 +254,8 @@ class Env:
     # need to do this for states used for training only!
     def step(self, action, p_obs_objs):
         n_observation, reward, terminal, info = self.gym_env.step(action)
-        try:
-            return self.features(p_obs_objs, n_observation), reward, terminal, info
-        except: 
-            print(p_obs_objs)
-            self.plot2Observation(n_observation)
-            exit(0)
+        return self.features(p_obs_objs, n_observation), reward, terminal, info
+    
 
     def reset(self):
         observation = self.gym_env.reset()
@@ -280,7 +297,7 @@ class Env:
         player_pixels = {}
         pole_pixels = {}
         tree_pixels = {}
-        for row in range(65, len(observation)):
+        for row in range(59, len(observation)):
             for col in range(7, 150):
                 pixel = observation[row][col]
                 # Convert to tuple for comparison

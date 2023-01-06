@@ -101,7 +101,7 @@ class DQNAgent:
         self.network_sync_counter += 1
         return loss.item()
 
-    def train(self, training_episodes):
+    def train(self, training_episodes, decrease_epsilon=False):
         print("")
         print("DQN AGENT: STARTING TRAINING")
         print("")
@@ -125,7 +125,7 @@ class DQNAgent:
                 # return (h_velocity, v_velocity, flag_h, flag_v), n_obs_objects
                 # return self.features(p_obs_objs, n_observation), reward, terminal, info
                 (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
-
+                #print("Features for state,",ep_len,":",n_features)
                 # Collect experience by adding to replay buffer.
                 self.replay_buffer.append((p_features, action, reward, n_features))
 
@@ -141,10 +141,11 @@ class DQNAgent:
                         loss = self.trainNNs(batch_size=self.replay_buffer.maxlen / 4)
                         losses += loss
             # As we explore, reduce exploration to exploitation.
-            if epsilon > 0.05:
+            if epsilon > 0.05 and decrease_epsilon:
                 epsilon -= (1 / (training_episodes / 2))
             losses_list.append(losses / ep_len), reward_list.append(sum_rewards), episode_len_list.append(
                 ep_len), epsilon_list.append(epsilon)
+            print()
             print("Episode length:",ep_len)
         self.env.gym_env.close()
         print()

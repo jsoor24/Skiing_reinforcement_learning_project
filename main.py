@@ -4,6 +4,7 @@ from DQNAgent import DQNAgent
 import matplotlib.pyplot as plt
 import os
 import torch 
+import matplotlib.image as mpimg
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -27,6 +28,13 @@ def plotLearningGraphs(learning_stats):
         plt.show()
     return
 
+# read an image
+def test_error_case(env):
+    observation = mpimg.imread('errorcase.png')
+    print(observation)
+    objects = env.identifyObjects(observation)
+    print(objects)
+
 # Initialise skiing environment.
 env = Env('Skiing-v4')
 
@@ -37,7 +45,7 @@ agent = RandomAgent(env)
 dqn_agent = DQNAgent(env=env, learning_rate=1e-3, sync_freq=5, replay_buffer_size=256)
 
 # Train agent.
-learning_stats = dqn_agent.train(2)
+learning_stats = dqn_agent.train(10)
 print(learning_stats)
 print("Saving trained model")
 dqn_agent.save_trained_model("skiing-dqn.pth")
@@ -48,8 +56,8 @@ dqn_agent.save_trained_model("skiing-dqn.pth")
 # Plot graphs
 plotLearningGraphs(learning_stats)
 print()
-dqn_avg_rew = dqn_agent.test_model(2)
-rand_avg_rew = agent.test_model(2)
+dqn_avg_rew = dqn_agent.test_model(10)
+rand_avg_rew = agent.test_model(10)
 print("Average reward DQN Agent: ", dqn_avg_rew)
 print("Average reward Random Agent: ", rand_avg_rew)
 
