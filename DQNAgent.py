@@ -163,8 +163,9 @@ class DQNAgent:
             while not terminal:
                 action = self.policy(p_features, epsilon=1)
                 (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
+                adjusted_reward = self.credit_assignment(n_features, reward)
                 # Collect experience by adding to replay buffer
-                replay_buffer.append((p_features, action, reward, n_features))
+                replay_buffer.append((p_features, action, adjusted_reward, n_features))
                 if len(replay_buffer)==replay_buffer.maxlen:
                     break
                 p_features = n_features
