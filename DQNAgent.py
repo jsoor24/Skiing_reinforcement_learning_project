@@ -243,11 +243,15 @@ class DQNAgent:
         return torch.randint(0, self.env.gym_env.action_space.n, (1,)).item()
 
     def test_model(self, ep_num, render=False):
-        episodes = []
+        print()
+        print("DQN AGENT: TESTING MODEL WITH EPSILON=0")
+        episode_rewards = []
+        print()
         for i in tqdm(range(ep_num)):
-            episodes.append(self.generateEpisode(0, render)[1])
-        return episodes
-        # return sum(episodes)/len(episodes)
+            episode = self.generateEpisode(0, render)
+            episode_rewards.append(episode[1])
+            print("Episode length:",len(episode[0]))
+        return episode_rewards
 
     def generateEpisode(self, epsilon, render=False):
         (p_features, p_objs), terminal = self.env.reset()
