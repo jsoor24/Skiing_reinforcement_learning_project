@@ -44,15 +44,14 @@ env = Env('Skiing-v4')
 
 # # Initialise agent using environment.
 # agent = RandomAgent(env)
-
 # # Create DQN agent.
 # dqn_agent = DQNAgent(env=env, learning_rate=1e-3, sync_freq=5, replay_buffer_size=256)
 
 # # Train agent.
 # learning_stats = dqn_agent.train(200)
 # print(learning_stats)
-# print("Saving trained model")
-# dqn_agent.save_trained_model("skiing-dqn.pth")
+# #print("Saving trained model")
+# #dqn_agent.save_trained_model("skiing-dqn.pth")
 
 # # Load the agent mode
 # # dqn_agent.load_pretrained_model("optimal-policy.pth")
@@ -72,5 +71,4 @@ env = Env('Skiing-v4')
 # plt.ylabel("Total reward random agent")
 # plt.show()
 
-#env.runFeatureExtraction()
-env.observationIterationTest()
+env.observationIterationFETest()

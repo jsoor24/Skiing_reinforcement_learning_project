@@ -9,7 +9,7 @@ import copy
 import traceback
 import matplotlib.image
 import numpy as np
-
+from math import sqrt
 
 class Env:
 
@@ -17,135 +17,33 @@ class Env:
         self.gym_env = self.makeEnv(environment)
         self.gym_env.render_mode = render_mode
         self.gym_env.env.obs_type = obs_type
-        self.number_of_features = 4
+        self.number_of_features = 6
 
-    def f(self,pixel):
-        # (row,col,pixel)
-        rgb = (pixel[2][0], pixel[2][1], pixel[2][2])
-        pixel_type = self.getObjectColourCategory(rgb)
-        return (pixel[0],pixel[1],pixel_type,rgb)
-        
-    def observationIterationTest(self):
+    def observationIterationFETest(self):
+        print()
         agent = RandomAgent(self)
         episode = agent.generateEpisode()
-        start_time = time.time()
-        observation = np.array(episode[0][0][0])
-        player_pixels = {}
-        pole_pixels = {}
-        tree_pixels = {}
-        for row in range(59, 250):
-            for col in range(7, 150):
-                pixel = observation[row,col]
-                pixel = (pixel[0], pixel[1], pixel[2])
-                # Convert to tuple for comparison
-                pixel_type = self.getObjectColourCategory(pixel)
-                if pixel_type == 'player':
-                    player_pixels[row, col] = pixel
-                elif pixel_type == 'pole':
-                    pole_pixels[row, col] = pixel
-                elif pixel_type == 'tree':
-                    tree_pixels[row, col] = pixel
-        print("With pixel checks: ","--- %s seconds ---" % (time.time() - start_time))
-        start_time = time.time()
-        player_pixels = {}
-        pole_pixels = {}
-        tree_pixels = {}
-        pixel_queue =[]
-        for row in range(59, 250):
-            for col in range(7, 150):
-                pixel = observation[row,col]
-                pixel = (pixel[0], pixel[1], pixel[2])
-                # Convert to tuple for comparison
-                pixel_type = self.treesGetObjectColourCategory(pixel)
-                if pixel_type == 'player':
-                    player_pixels[row, col] = pixel
-                elif pixel_type == 'pole':
-                    pole_pixels[row, col] = pixel
-                elif pixel_type == 'tree':
-                    tree_pixels[row, col] = pixel
-        print("With checks including trees: ","--- %s seconds ---" % (time.time() - start_time))
-        start_time = time.time()
-        color_dict={}
-        for row in range(59, 250):
-            for col in range(7, 150):
-                pixel = observation[row,col]
-                pixels = color_dict.setdefault((pixel[0], pixel[1], pixel[2]),[])
-                pixels.append((row,col))
-        print("No pixel checks (Using dict): ","--- %s seconds ---" % (time.time() - start_time))
-        print("Player pixels:",color_dict[(214, 92, 92)])
-        print("Pole pixels:",color_dict.get((66, 72, 200),[])+color_dict.get((184, 50, 50),[]))
-        print("Tree pixels:",color_dict.get((158, 208, 101),[])+color_dict.get((72, 160, 72),[])+color_dict.get((110, 156, 66),[])+color_dict.get((82, 126, 45),[]))
-
-    def runFeatureExtraction(self):
-        # Returns episode in data struct (list(trajectory), sum_reward) for testing
-        agent = RandomAgent(self)
-        eps_length = []
-        for i in range(10):
-            eps_length.append(len(agent.generateEpisode()[0]))
-        print("Average episode length:", sum(eps_length) / len(eps_length))
-        episode = agent.generateEpisode()
-        print("Episode length: ", len(episode[0]))
-        feature_list = []
-        p_state_objects = None
-        start_time = time.time()
-        count = 0
-        for idx in range(len(episode[0]) - 1):
-            state_observation = episode[0][idx][0]
-            new_features, p_state_objects = self.features(p_state_objects,state_observation)
-            count+=1
-            if count == 2: break
-        print("--- %s seconds ---" % (time.time() - start_time))
-
-    # Function to test feature extraction of skiing while implementing 
-    def testFeatureExtraction(self):
-        # Returns episode in data struct (list(trajectory), sum_reward) for testing
-        episode = RandomAgent(self).generateEpisode()
-
-        # For random time steps
-        # states = random.choices(episode[0], k=10)
-        # For x time steps at a time
-        states = []
-        for i in range(100):
-            states.append(episode[0][i])
-        count = 1
-        p_state_obs = None
-        prev_flag = []
-        prev_pos = []
-
-        for idx in range(10, len(states), 10):
-            state = states[idx]
-            n_state_obs = state[0]
-            # Data structure of objects:
-            # dict(object_type, list( dict( pixel_coord, rgb_value)))
-            features = self.features(p_state_obs, n_state_obs)
-
-            if p_state_obs is not None:
-                p_objects, n_objects = self.detectObjects(p_state_obs, n_state_obs)
-                prev_flag = p_objects["pole"]
-                prev_pos = p_objects["player"][0]
-            else:
-                p_objects, n_objects = self.detectObjects(None, n_state_obs)
-
-            next_flag = n_objects["pole"]
-            next_pos = n_objects["player"][0]
-
-            print("Flags: ", prev_flag, " -> ", next_flag)
-            print("Player: ", prev_pos, " -> ", next_pos)
-            print("--------")
-            print("Features for random state", count, ":")
-            print(features)
-            actions = []
-            for i in range(idx - 10, idx, 1):
-                action = states[i][1]
-                if action > 0:
-                    actions.append(states[i][1])
-            print("Action last 10 average: ", sum(actions) / len(actions))
-            print("Actions: ", actions)
+        trajectory = episode[0]
+        state_nums = random.choices(range(1,len(trajectory)),k=10)
+        for idx in state_nums:
+            print("-----------------------------------------")
+            observation = trajectory[idx][0]
+            p_objects=self.detectObjects(trajectory[idx-1][0])
+            print("Previous state objects:",p_objects)
             print()
-
-            # self.plot2Observation(n_state_obs)
-            p_state_obs = n_state_obs
-            count += 1
+            start_time = time.time()
+            features=self.features(p_objects,observation,optimised=False)
+            print("Unoptimised FE (Using pixel checks): ","--- %s seconds ---" % (time.time() - start_time))
+            print("Unoptimised FE:",features)
+            print()
+            # Rerun object detection on previous state as .pop() in FE removes poles
+            p_objects=self.detectObjects(trajectory[idx-1][0])
+            start_time = time.time()
+            op_objects=self.features(p_objects,observation,optimised=True)
+            print("Optimised FE (Using dict): ","--- %s seconds ---" % (time.time() - start_time))
+            print("Optimised FE:",features)
+            print()
+            self.plot2Observation(observation)
 
     def plot2Observation(self, observation):
         plt.axis("on")
@@ -232,6 +130,29 @@ class Env:
             if flag_v_pos > 0:
                 return flag_h_pos, flag_v_pos
         return 0, 0
+    
+    def calculate_closet_tree_distance(self, n_obs_objects):
+        player_pos = n_obs_objects["player"][0]
+        # Get position of trees which are below player
+        trees = n_obs_objects["tree"]
+        distances = []
+        tree_idxs = []
+        idx=0
+        for tree in trees:
+            tree_v_dis = tree[0] - player_pos[0]
+            # Test if first flag set is next sub goal (not above player)
+            if tree_v_dis > 0:
+                tree_h_dis = tree[1] - player_pos[1]
+                distances.append(sqrt( tree_h_dis**2 + tree_v_dis**2 ))
+                tree_idxs.append(idx)
+            idx+=1
+        closest_tree_idx = tree_idxs[distances.index(min(distances))]
+        closest_tree = trees[closest_tree_idx]
+        print("Trees:",trees)
+        print("Closest tree:",closest_tree)
+        h_dist = closest_tree[1] - player_pos[1]
+        v_dist = closest_tree[0] - player_pos[0]
+        return v_dist, h_dist
 
     # Get centre point between two flags
     def getFlagCentre(self, first, second):
@@ -263,9 +184,9 @@ class Env:
         return objects
 
     # Wrapper function to allow us to call with p = None
-    def detectObjects(self, n_observation):
+    def detectObjects(self, n_observation,optimised=True):
         #start_time = time.time()
-        n_obs = self.identifyObjects(n_observation)
+        n_obs = self.identifyObjects(n_observation,optimised=optimised)
         #print("identifyObjects: ","--- %s seconds ---" % (time.time() - start_time))
         if (len(n_obs["pole"]) == 0):
             print("Error no poles detected: ", n_obs)
@@ -276,11 +197,12 @@ class Env:
     #   Player vertical velocity
     #   Flag horizontal distance
     #   Flag vertical distance
-    def features(self, p_obs_objects, n_observation):
+    def features(self, p_obs_objects, n_observation, optimised=True):
         #start_time = time.time()
-        n_obs_objects = self.detectObjects(n_observation)
+        n_obs_objects = self.detectObjects(n_observation,optimised=optimised)
         n_obs_objects_to_return = copy.deepcopy(n_obs_objects)
         n_obs_objects_for_dist = copy.deepcopy(n_obs_objects)
+        n_obs_objects_for_tree_dist = copy.deepcopy(n_obs_objects)
         #print("detectObjects: ","--- %s seconds ---" % (time.time() - start_time))
 
         if p_obs_objects is None:
@@ -302,8 +224,9 @@ class Env:
 
         #start_time = time.time()
         flag_h, flag_v = self.calculate_flag_distances(n_obs_objects_for_dist)
+        tree_h, tree_v = self.calculate_closet_tree_distance(n_obs_objects_for_tree_dist)
         #print("calculate_flag_distances: ","--- %s seconds ---" % (time.time() - start_time))
-        return (h_velocity, v_velocity, flag_h, flag_v), n_obs_objects_to_return
+        return (h_velocity, v_velocity, flag_h, flag_v, tree_h, tree_v), n_obs_objects_to_return
 
     # We are performing feature extraction on every step of experience
     # need to do this for states used for training only!
@@ -351,10 +274,25 @@ class Env:
             return 'player'
         elif pixel == (66, 72, 200) or pixel == (184, 50, 50):
             return 'pole'
-        # elif pixel in [(158, 208, 101), (72, 160, 72), (110, 156, 66), (82, 126, 45)]:
-        #    return 'tree'
+        elif pixel in [(158, 208, 101), (72, 160, 72), (110, 156, 66), (82, 126, 45)]:
+            return 'tree'
         else:
             return None
+
+    # Fetches all pixels associated with one object/colour
+    def optimisedIdentifyObjectPixels(self, observation):
+        image = np.array(observation)
+        color_dict={}
+        for row in range(59, 250):
+            for col in range(7, 150):
+                pixel = observation[row,col]
+                pixel = (pixel[0], pixel[1], pixel[2])
+                pixels = color_dict.setdefault(pixel,{})
+                pixels[(row,col)]=pixel
+        player_pixels=color_dict[(214, 92, 92)]
+        pole_pixels=color_dict.get((66, 72, 200),{})|color_dict.get((184, 50, 50),{})
+        tree_pixels=color_dict.get((158, 208, 101),{})|color_dict.get((72, 160, 72),{})|color_dict.get((110, 156, 66),{})|color_dict.get((82, 126, 45),{})
+        return player_pixels, pole_pixels, tree_pixels
 
     # Fetches all pixels associated with one object/colour
     def identifyObjectPixels(self, observation):
@@ -393,9 +331,12 @@ class Env:
             self.findAdjacentPixelsRecursively(pixel_dict, row, col - 1, object_pixels, ob_type, player_dict)
 
     # Identifies objects from observation using pixel colour categories and populates dictionary
-    def identifyObjects(self, observation):
+    def identifyObjects(self, observation,optimised=True):
         #start_time = time.time()
-        object_pixel_dicts = self.identifyObjectPixels(observation)
+        if optimised:
+            object_pixel_dicts = self.optimisedIdentifyObjectPixels(observation)
+        else:
+            object_pixel_dicts = self.identifyObjectPixels(observation)
         #print("identifyObjectPixels: --- %s seconds ---" % (time.time() - start_time))
         player_dict = object_pixel_dicts[0]
         objects = {'player': [player_dict]}
