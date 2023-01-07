@@ -148,8 +148,6 @@ class Env:
             idx+=1
         closest_tree_idx = tree_idxs[distances.index(min(distances))]
         closest_tree = trees[closest_tree_idx]
-        print("Trees:",trees)
-        print("Closest tree:",closest_tree)
         h_dist = closest_tree[1] - player_pos[1]
         v_dist = closest_tree[0] - player_pos[0]
         return v_dist, h_dist

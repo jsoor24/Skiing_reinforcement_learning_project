@@ -177,7 +177,7 @@ class DQNAgent:
     # ^ scale the positive reward by small v dist to flag is
     def credit_assignment(self, features, reward):
         adjusted_reward = reward
-        h_vel, v_vel, h_dist, v_dist = features
+        h_vel, v_vel, h_dist, v_dist , h_tree, v_tree= features
 
         if h_vel < -2 or h_vel > 2:
             adjusted_reward -= 5
