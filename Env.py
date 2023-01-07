@@ -8,6 +8,7 @@ from tqdm import tqdm
 import copy
 import traceback
 import matplotlib.image
+import numpy as np
 
 
 class Env:
@@ -18,6 +19,39 @@ class Env:
         self.gym_env.env.obs_type = obs_type
         self.number_of_features = 4
 
+    def observationIterationTest(self):
+        agent = RandomAgent(self)
+        episode = agent.generateEpisode()
+        start_time = time.time()
+        observation = np.array(episode[0][0][0])
+        player_pixels = {}
+        pole_pixels = {}
+        tree_pixels = {}
+        for row in range(59, 250):
+            for col in range(7, 150):
+                pixel = observation[row,col]
+                # Convert to tuple for comparison
+                pixel = (pixel[0], pixel[1], pixel[2])
+                pixel_type = self.getObjectColourCategory(pixel)
+                if pixel_type == 'player':
+                    player_pixels[row, col] = pixel
+                elif pixel_type == 'pole':
+                    pole_pixels[row, col] = pixel
+                elif pixel_type == 'tree':
+                    tree_pixels[row, col] = pixel
+        print("With pixel checks: ","--- %s seconds ---" % (time.time() - start_time))
+        start_time = time.time()
+        player_pixels = {}
+        pole_pixels = {}
+        tree_pixels = {}
+        for row in range(59, 250):
+            for col in range(7, 150):
+                pixel = observation[row,col]
+                # Convert to tuple for comparison
+                pixel = (pixel[0], pixel[1], pixel[2])
+        print("No pixel checks: ","--- %s seconds ---" % (time.time() - start_time))
+
+
     def runFeatureExtraction(self):
         # Returns episode in data struct (list(trajectory), sum_reward) for testing
         agent = RandomAgent(self)
@@ -27,20 +61,15 @@ class Env:
         print("Average episode length:", sum(eps_length) / len(eps_length))
         episode = agent.generateEpisode()
         print("Episode length: ", len(episode[0]))
-        features = []
-        p_obs = None
+        feature_list = []
+        p_state_objects = None
         start_time = time.time()
-        count = 11
-        for idx in tqdm(range(len(episode[0]) - 1)):
-            state = episode[0][idx]
-            n_obs = state[0]
-            # self.plot2Observation(n_obs)
-            # print()
-            features.append(self.features(p_obs, n_obs))
-            p_obs = n_obs
-            # print()
-            count += 1
-            if count == 10: break
+        count = 0
+        for idx in range(len(episode[0]) - 1):
+            state_observation = episode[0][idx][0]
+            new_features, p_state_objects = self.features(p_state_objects,state_observation)
+            count+=1
+            if count == 2: break
         print("--- %s seconds ---" % (time.time() - start_time))
 
     # Function to test feature extraction of skiing while implementing 
@@ -211,7 +240,9 @@ class Env:
 
     # Wrapper function to allow us to call with p = None
     def detectObjects(self, n_observation):
+        start_time = time.time()
         n_obs = self.identifyObjects(n_observation)
+        print("identifyObjects: ","--- %s seconds ---" % (time.time() - start_time))
         if (len(n_obs["pole"]) == 0):
             print("Error no poles detected: ", n_obs)
         return self.objectsToObjectCoords(n_obs)
@@ -226,7 +257,7 @@ class Env:
         n_obs_objects = self.detectObjects(n_observation)
         n_obs_objects_to_return = copy.deepcopy(n_obs_objects)
         n_obs_objects_for_dist = copy.deepcopy(n_obs_objects)
-        # print("Object detection: --- %s seconds ---" % (time.time() - start_time))
+        print("detectObjects: ","--- %s seconds ---" % (time.time() - start_time))
 
         if p_obs_objects is None:
             h_velocity = 0
@@ -235,6 +266,7 @@ class Env:
             start_time = time.time()
             try:
                 h_velocity, v_velocity = self.calculate_player_velocities(p_obs_objects, n_obs_objects)
+                print("calculate_player_velocities: ","--- %s seconds ---" % (time.time() - start_time))
             except Exception as e:
                 print("Previous object: ", p_obs_objects)
                 print("New object: ", n_obs_objects)
@@ -243,12 +275,10 @@ class Env:
                 self.plot2Observation(n_observation)
                 traceback.print_exc()
                 exit(0)
-            # print("Velocity calculation: --- %s seconds ---" % (time.time() - start_time))
 
         start_time = time.time()
         flag_h, flag_v = self.calculate_flag_distances(n_obs_objects_for_dist)
-
-        # print("Flag distance calculation: --- %s seconds ---" % (time.time() - start_time))
+        print("calculate_flag_distances: ","--- %s seconds ---" % (time.time() - start_time))
         return (h_velocity, v_velocity, flag_h, flag_v), n_obs_objects_to_return
 
     # We are performing feature extraction on every step of experience
@@ -294,12 +324,13 @@ class Env:
 
     # Fetches all pixels associated with one object/colour
     def identifyObjectPixels(self, observation):
+        image = np.array(observation)
         player_pixels = {}
         pole_pixels = {}
         tree_pixels = {}
         for row in range(59, len(observation)):
             for col in range(7, 150):
-                pixel = observation[row][col]
+                pixel = image[row,col]
                 # Convert to tuple for comparison
                 pixel = (pixel[0], pixel[1], pixel[2])
                 pixel_type = self.getObjectColourCategory(pixel)
@@ -329,9 +360,10 @@ class Env:
 
     # Identifies objects from observation using pixel colour categories and populates dictionary
     def identifyObjects(self, observation):
-        # start_time = time.time()
+        print()
+        start_time = time.time()
         object_pixel_dicts = self.identifyObjectPixels(observation)
-        # print("identifyObjectPixels: --- %s seconds ---" % (time.time() - start_time))
+        print("identifyObjectPixels: --- %s seconds ---" % (time.time() - start_time))
         player_dict = object_pixel_dicts[0]
         objects = {'player': [player_dict]}
         object_pixels = {}
@@ -349,4 +381,5 @@ class Env:
                 self.findAdjacentPixelsRecursively(pixel_dict, row, col, object_pixels, ob_type, player_dict.copy())
                 ob_list.append(object_pixels)
                 object_pixels = {}
+        print()
         return objects
