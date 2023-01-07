@@ -187,7 +187,7 @@ class DQNAgent:
 
         if -14 < h_dist < 14:
             if(v_dist!=0):
-                adjusted_reward += round(50 / v_dist)
+                adjusted_reward += round(50 / abs(v_dist))
             else:
                 adjusted_reward += 50
 

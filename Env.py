@@ -65,16 +65,16 @@ class Env:
                     tree_pixels[row, col] = pixel
         print("With checks including trees: ","--- %s seconds ---" % (time.time() - start_time))
         start_time = time.time()
-        player_pixels = {}
-        pole_pixels = {}
-        tree_pixels = {}
-        pixel_queue =[]
+        color_dict={}
         for row in range(59, 250):
             for col in range(7, 150):
                 pixel = observation[row,col]
-                pixel = (pixel[0], pixel[1], pixel[2])
-        print("No pixel checks: ","--- %s seconds ---" % (time.time() - start_time))
-
+                pixels = color_dict.setdefault((pixel[0], pixel[1], pixel[2]),[])
+                pixels.append((row,col))
+        print("No pixel checks (Using dict): ","--- %s seconds ---" % (time.time() - start_time))
+        print("Player pixels:",color_dict[(214, 92, 92)])
+        print("Pole pixels:",color_dict.get((66, 72, 200),[])+color_dict.get((184, 50, 50),[]))
+        print("Tree pixels:",color_dict.get((158, 208, 101),[])+color_dict.get((72, 160, 72),[])+color_dict.get((110, 156, 66),[])+color_dict.get((82, 126, 45),[]))
 
     def runFeatureExtraction(self):
         # Returns episode in data struct (list(trajectory), sum_reward) for testing
@@ -337,9 +337,9 @@ class Env:
         environment.close()
 
     def treesGetObjectColourCategory(self, pixel):
-        if pixel == 214:
+        if pixel == (214, 92, 92):
             return 'player'
-        elif pixel == 66 or pixel == 184:
+        elif pixel == (66, 72, 200) or pixel == (184, 50, 50):
             return 'pole'
         elif pixel in [(158, 208, 101), (72, 160, 72), (110, 156, 66), (82, 126, 45)]:
             return 'tree'
