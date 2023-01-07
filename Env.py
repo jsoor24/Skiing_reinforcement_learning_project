@@ -19,6 +19,12 @@ class Env:
         self.gym_env.env.obs_type = obs_type
         self.number_of_features = 4
 
+    def f(self,pixel):
+        # (row,col,pixel)
+        rgb = (pixel[2][0], pixel[2][1], pixel[2][2])
+        pixel_type = self.getObjectColourCategory(rgb)
+        return (pixel[0],pixel[1],pixel_type,rgb)
+        
     def observationIterationTest(self):
         agent = RandomAgent(self)
         episode = agent.generateEpisode()
@@ -30,8 +36,8 @@ class Env:
         for row in range(59, 250):
             for col in range(7, 150):
                 pixel = observation[row,col]
-                # Convert to tuple for comparison
                 pixel = (pixel[0], pixel[1], pixel[2])
+                # Convert to tuple for comparison
                 pixel_type = self.getObjectColourCategory(pixel)
                 if pixel_type == 'player':
                     player_pixels[row, col] = pixel
@@ -44,10 +50,28 @@ class Env:
         player_pixels = {}
         pole_pixels = {}
         tree_pixels = {}
+        pixel_queue =[]
         for row in range(59, 250):
             for col in range(7, 150):
                 pixel = observation[row,col]
+                pixel = (pixel[0], pixel[1], pixel[2])
                 # Convert to tuple for comparison
+                pixel_type = self.treesGetObjectColourCategory(pixel)
+                if pixel_type == 'player':
+                    player_pixels[row, col] = pixel
+                elif pixel_type == 'pole':
+                    pole_pixels[row, col] = pixel
+                elif pixel_type == 'tree':
+                    tree_pixels[row, col] = pixel
+        print("With checks including trees: ","--- %s seconds ---" % (time.time() - start_time))
+        start_time = time.time()
+        player_pixels = {}
+        pole_pixels = {}
+        tree_pixels = {}
+        pixel_queue =[]
+        for row in range(59, 250):
+            for col in range(7, 150):
+                pixel = observation[row,col]
                 pixel = (pixel[0], pixel[1], pixel[2])
         print("No pixel checks: ","--- %s seconds ---" % (time.time() - start_time))
 
@@ -240,9 +264,9 @@ class Env:
 
     # Wrapper function to allow us to call with p = None
     def detectObjects(self, n_observation):
-        start_time = time.time()
+        #start_time = time.time()
         n_obs = self.identifyObjects(n_observation)
-        print("identifyObjects: ","--- %s seconds ---" % (time.time() - start_time))
+        #print("identifyObjects: ","--- %s seconds ---" % (time.time() - start_time))
         if (len(n_obs["pole"]) == 0):
             print("Error no poles detected: ", n_obs)
         return self.objectsToObjectCoords(n_obs)
@@ -253,20 +277,20 @@ class Env:
     #   Flag horizontal distance
     #   Flag vertical distance
     def features(self, p_obs_objects, n_observation):
-        start_time = time.time()
+        #start_time = time.time()
         n_obs_objects = self.detectObjects(n_observation)
         n_obs_objects_to_return = copy.deepcopy(n_obs_objects)
         n_obs_objects_for_dist = copy.deepcopy(n_obs_objects)
-        print("detectObjects: ","--- %s seconds ---" % (time.time() - start_time))
+        #print("detectObjects: ","--- %s seconds ---" % (time.time() - start_time))
 
         if p_obs_objects is None:
             h_velocity = 0
             v_velocity = 0
         else:
-            start_time = time.time()
+            #start_time = time.time()
             try:
                 h_velocity, v_velocity = self.calculate_player_velocities(p_obs_objects, n_obs_objects)
-                print("calculate_player_velocities: ","--- %s seconds ---" % (time.time() - start_time))
+                #print("calculate_player_velocities: ","--- %s seconds ---" % (time.time() - start_time))
             except Exception as e:
                 print("Previous object: ", p_obs_objects)
                 print("New object: ", n_obs_objects)
@@ -276,9 +300,9 @@ class Env:
                 traceback.print_exc()
                 exit(0)
 
-        start_time = time.time()
+        #start_time = time.time()
         flag_h, flag_v = self.calculate_flag_distances(n_obs_objects_for_dist)
-        print("calculate_flag_distances: ","--- %s seconds ---" % (time.time() - start_time))
+        #print("calculate_flag_distances: ","--- %s seconds ---" % (time.time() - start_time))
         return (h_velocity, v_velocity, flag_h, flag_v), n_obs_objects_to_return
 
     # We are performing feature extraction on every step of experience
@@ -311,6 +335,16 @@ class Env:
             environment.step(environment.action_space.sample())
             time.sleep(0.01)  # sleep between each timestep
         environment.close()
+
+    def treesGetObjectColourCategory(self, pixel):
+        if pixel == 214:
+            return 'player'
+        elif pixel == 66 or pixel == 184:
+            return 'pole'
+        elif pixel in [(158, 208, 101), (72, 160, 72), (110, 156, 66), (82, 126, 45)]:
+            return 'tree'
+        else:
+            return None
 
     def getObjectColourCategory(self, pixel):
         if pixel == (214, 92, 92):
@@ -360,10 +394,9 @@ class Env:
 
     # Identifies objects from observation using pixel colour categories and populates dictionary
     def identifyObjects(self, observation):
-        print()
-        start_time = time.time()
+        #start_time = time.time()
         object_pixel_dicts = self.identifyObjectPixels(observation)
-        print("identifyObjectPixels: --- %s seconds ---" % (time.time() - start_time))
+        #print("identifyObjectPixels: --- %s seconds ---" % (time.time() - start_time))
         player_dict = object_pixel_dicts[0]
         objects = {'player': [player_dict]}
         object_pixels = {}
@@ -381,5 +414,4 @@ class Env:
                 self.findAdjacentPixelsRecursively(pixel_dict, row, col, object_pixels, ob_type, player_dict.copy())
                 ob_list.append(object_pixels)
                 object_pixels = {}
-        print()
         return objects
