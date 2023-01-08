@@ -151,7 +151,7 @@ class DQNAgent:
                         losses += loss
             # As we explore, reduce exploration to exploitation.
             if epsilon > 0.1 and count>(training_episodes*0.7):
-                epsilon -= 0.002
+                epsilon -= 0.0005
             losses_list.append(losses / ep_len), reward_list.append(sum_rewards), episode_len_list.append(
                 ep_len), epsilon_list.append(epsilon)
             count+=1

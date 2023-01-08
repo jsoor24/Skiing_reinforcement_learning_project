@@ -47,7 +47,7 @@ agent = RandomAgent(env)
 dqn_agent = DQNAgent(env=env, learning_rate=1e-3, sync_freq=5, replay_buffer_size=256)
 
 # Train agent.
-learning_stats = dqn_agent.train(10000)
+learning_stats = dqn_agent.train(8000)
 print(learning_stats)
 print("Saving trained model")
 dqn_agent.save_trained_model("skiing-dqn-frameskipping-5.pth")
