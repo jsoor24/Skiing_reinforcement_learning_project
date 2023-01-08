@@ -3,7 +3,7 @@ from RandomAgent import RandomAgent
 from DQNAgent import DQNAgent
 
 # Initialise skiing environment.
-env = Env('Skiing-v4',frameskip=5)
+env = Env('Skiing-v4',frameskip=0)
 
 # Initialise agent using environment.
 # agent = RandomAgent(env)
@@ -20,5 +20,5 @@ agent = DQNAgent(env=env, learning_rate=1e-3, sync_freq=5, replay_buffer_size=25
 agent.load_pretrained_model("skiing-dqn.pth")
 
 print()
-print("Average reward DQN Agent: ", agent.test_model(1, True))
+print("Average reward DQN Agent: ", agent.test_model(10, True))
 # print("Average reward Random Agent: ", agent.test_model(10, True))

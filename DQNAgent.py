@@ -4,6 +4,7 @@ import numpy
 from collections import deque
 import random
 from tqdm import tqdm
+import time
 
 
 class DQNAgent:
@@ -41,9 +42,9 @@ class DQNAgent:
         return
 
     def load_pretrained_model(self, model_path):
-        self.q_action_values_nn.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+        self.q_action_values_nn.load_state_dict(torch.load(model_path))
 
-    def save_trained_model(self, model_path="cartpole-dqn.pth"):
+    def save_trained_model(self, model_path):
         torch.save(self.q_action_values_nn.state_dict(), model_path)
 
     def sample_from_replay_buffer(self, sample_size):
@@ -105,7 +106,7 @@ class DQNAgent:
         print("")
         print("DQN AGENT: STARTING TRAINING")
         print("")
-        epsilon = 0.9
+        epsilon = 1
         # Variable to test if replay buffer has been half filled. Set to half of capcity to begin with, 
         # so after first time-step, training begins.
         buffer_idx = self.replay_buffer.maxlen / 2
@@ -133,7 +134,7 @@ class DQNAgent:
                     continue
                 # print("Features for state,",ep_len,":",n_features)
 
-                adjusted_reward = self.credit_assignment(n_features, reward)
+                adjusted_reward = self.credit_assignment(n_features, reward, action)
 
                 # Collect experience by adding to replay buffer.
                 self.replay_buffer.append((p_features, action, adjusted_reward, n_features))
@@ -150,8 +151,8 @@ class DQNAgent:
                         loss = self.trainNNs(batch_size=self.replay_buffer.maxlen / 4)
                         losses += loss
             # As we explore, reduce exploration to exploitation.
-            if epsilon > 0.1 and count>(training_episodes*0.7):
-                epsilon -= 0.0005
+            if epsilon > 0.1 and count>(training_episodes*0.6):
+                epsilon -= 0.04
             losses_list.append(losses / ep_len), reward_list.append(sum_rewards), episode_len_list.append(
                 ep_len), epsilon_list.append(epsilon)
             count+=1
@@ -168,7 +169,7 @@ class DQNAgent:
             while not terminal:
                 action = self.policy(p_features, epsilon=1)
                 (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
-                adjusted_reward = self.credit_assignment(n_features, reward)
+                adjusted_reward = self.credit_assignment(n_features, reward, action)
                 # Collect experience by adding to replay buffer
                 replay_buffer.append((p_features, action, adjusted_reward, n_features))
                 if len(replay_buffer) == replay_buffer.maxlen:
@@ -180,21 +181,24 @@ class DQNAgent:
     # if v vel is 0 -> negative rew
     # if h dist to flag is +- 14 -> positive rew (from centre, +- 14 is the flag)
     # ^ scale the positive reward by small v dist to flag is
-    def credit_assignment(self, features, reward):
+    def credit_assignment(self, features, reward, action):
         adjusted_reward = reward
-        h_vel, v_vel, h_dist, v_dist , h_tree, v_tree= features
+        h_vel, v_vel, h_dist, v_dist, h_tree, v_tree= features
 
-        if h_vel < -2 or h_vel > 2:
-            adjusted_reward -= 5
+        # if h_vel < -2 or h_vel > 2:
+        #     adjusted_reward -= 5
 
         if v_vel == 0:
-            adjusted_reward -= 10
+            adjusted_reward -= 50
 
         if -14 < h_dist < 14:
-            if(v_dist!=0):
-                adjusted_reward += round(50 / abs(v_dist))
-            else:
-                adjusted_reward += 50
+            adjusted_reward += 100
+        else:
+            if(v_dist<50 and v_dist>0):
+                adjusted_reward -= 100
+            
+        if action == 0:
+            adjusted_reward -= 10
 
         return adjusted_reward
 
@@ -269,6 +273,7 @@ class DQNAgent:
             # If been told to render, render before every action so user can see simulation.
             if render:
                 self.env.gym_env.render()
+                time.sleep(0.01)
             action = self.policy(p_features, epsilon)
             (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
             sum_of_reward = sum_of_reward + reward

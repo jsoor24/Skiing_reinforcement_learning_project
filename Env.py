@@ -245,7 +245,8 @@ class Env:
     def step(self, action, p_obs_objs):
         n_observation, reward, terminal, info = self.gym_env.step(action)
         for i in range(self.frameskip):
-            self.gym_env.step(0)
+            n_observation, hidden_reward, terminal, _ = self.gym_env.step(0)
+            reward+=hidden_reward
         return self.features(p_obs_objs, n_observation), reward, terminal, info
 
     def reset(self):
