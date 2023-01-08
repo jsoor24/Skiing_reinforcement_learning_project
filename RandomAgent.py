@@ -1,4 +1,5 @@
 from tqdm import tqdm
+import time
 
 
 class RandomAgent:
@@ -20,7 +21,7 @@ class RandomAgent:
 
     # Generates an episode. Returns trajectory containing list of tuples(observation,action,reward) 
     # and total reward collected by that episode
-    def generateEpisode(self, render=False):
+    def generateEpisode(self, render=False, frameskip=False):
         env = self.env
         observation = env.reset()
         episode = []
@@ -30,10 +31,14 @@ class RandomAgent:
             # If been told to render, render before every action so user can see simulation. 
             if render:
                 env.render()
+                time.sleep(1) 
             action = self.policy(observation)
             n_observation, reward, terminal, info = env.step(action)
             sum_of_reward = sum_of_reward + reward
             episode.append((observation, action, reward))
+            if(frameskip):
+                for i in range(5):
+                    n_observation, reward, terminal, info = env.step(0)
             observation = n_observation
         env.close()
         return episode, sum_of_reward

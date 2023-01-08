@@ -13,10 +13,11 @@ from math import sqrt
 
 class Env:
 
-    def __init__(self, environment, render_mode='human', obs_type='rgb'):
+    def __init__(self, environment, render_mode='human', obs_type='rgb', frameskip=0):
         self.gym_env = self.makeEnv(environment)
         self.gym_env.render_mode = render_mode
         self.gym_env.env.obs_type = obs_type
+        self.frameskip = frameskip
         self.number_of_features = 6
 
     def observationIterationFETest(self):
@@ -28,7 +29,9 @@ class Env:
         for idx in state_nums:
             print("-----------------------------------------")
             observation = trajectory[idx][0]
-            p_objects=self.detectObjects(trajectory[idx-1][0])
+            p_observation = trajectory[idx-5][0]
+            # Frame skipping
+            p_objects=self.detectObjects(p_observation)
             print("Previous state objects:",p_objects)
             print()
             start_time = time.time()
@@ -43,7 +46,16 @@ class Env:
             print("Optimised FE (Using dict): ","--- %s seconds ---" % (time.time() - start_time))
             print("Optimised FE:",features)
             print()
-            self.plot2Observation(observation)
+            self.plot2Images(p_observation,observation)
+
+    def plot2Images(self, im1, im2):
+        # Initialise figure with 2 sub-plots and show image of first and last observations.
+        fig1, axes = plt.subplots(1, 2)
+        axes[0].imshow(im1, aspect='auto')
+        axes[0].set_title("Previous observation")
+        axes[1].imshow(im2, aspect='auto')
+        axes[1].set_title("Current observation")
+        plt.show()
 
     def plot2Observation(self, observation):
         plt.axis("on")
@@ -198,6 +210,8 @@ class Env:
     def features(self, p_obs_objects, n_observation, optimised=True):
         #start_time = time.time()
         n_obs_objects = self.detectObjects(n_observation,optimised=optimised)
+        if(len(n_obs_objects["player"])==0):
+            n_obs_objects["player"]==p_obs_objects["player"]
         n_obs_objects_to_return = copy.deepcopy(n_obs_objects)
         n_obs_objects_for_dist = copy.deepcopy(n_obs_objects)
         n_obs_objects_for_tree_dist = copy.deepcopy(n_obs_objects)
@@ -230,6 +244,8 @@ class Env:
     # need to do this for states used for training only!
     def step(self, action, p_obs_objs):
         n_observation, reward, terminal, info = self.gym_env.step(action)
+        for i in range(self.frameskip):
+            self.gym_env.step(0)
         return self.features(p_obs_objs, n_observation), reward, terminal, info
 
     def reset(self):
@@ -287,7 +303,7 @@ class Env:
                 pixel = (pixel[0], pixel[1], pixel[2])
                 pixels = color_dict.setdefault(pixel,{})
                 pixels[(row,col)]=pixel
-        player_pixels=color_dict[(214, 92, 92)]
+        player_pixels=color_dict.get((214, 92, 92),{})
         pole_pixels=color_dict.get((66, 72, 200),{})|color_dict.get((184, 50, 50),{})
         tree_pixels=color_dict.get((158, 208, 101),{})|color_dict.get((72, 160, 72),{})|color_dict.get((110, 156, 66),{})|color_dict.get((82, 126, 45),{})
         return player_pixels, pole_pixels, tree_pixels

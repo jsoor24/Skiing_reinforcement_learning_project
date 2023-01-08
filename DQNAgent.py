@@ -105,7 +105,7 @@ class DQNAgent:
         print("")
         print("DQN AGENT: STARTING TRAINING")
         print("")
-        epsilon = 1
+        epsilon = 0.9
         # Variable to test if replay buffer has been half filled. Set to half of capcity to begin with, 
         # so after first time-step, training begins.
         buffer_idx = self.replay_buffer.maxlen / 2
@@ -113,6 +113,7 @@ class DQNAgent:
         losses_list, reward_list, episode_len_list, epsilon_list = [], [], [], []
         # Enter loop with progress bar. 
         print("Progress:")
+        count=1
         for ep in tqdm(range(training_episodes)):
             (p_features, p_objs), terminal = self.env.reset()
             sum_rewards, ep_len, losses = 0, 0, 0
@@ -124,7 +125,12 @@ class DQNAgent:
 
                 # return (h_velocity, v_velocity, flag_h, flag_v), n_obs_objects
                 # return self.features(p_obs_objs, n_observation), reward, terminal, info
-                (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
+                try:
+                    (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
+                except:
+                    print("Error with FE. Skipping frame.")
+                    self.env.gym_env.step(0)
+                    continue
                 # print("Features for state,",ep_len,":",n_features)
 
                 adjusted_reward = self.credit_assignment(n_features, reward)
@@ -144,12 +150,11 @@ class DQNAgent:
                         loss = self.trainNNs(batch_size=self.replay_buffer.maxlen / 4)
                         losses += loss
             # As we explore, reduce exploration to exploitation.
-            if epsilon > 0.05 and decrease_epsilon:
-                epsilon -= (1 / (training_episodes / 2))
+            if epsilon > 0.1 and count>(training_episodes*0.7):
+                epsilon -= 0.002
             losses_list.append(losses / ep_len), reward_list.append(sum_rewards), episode_len_list.append(
                 ep_len), epsilon_list.append(epsilon)
-            print()
-            print("Episode length:", ep_len)
+            count+=1
         self.env.gym_env.close()
         print()
         print("TRAINING COMPLETED")

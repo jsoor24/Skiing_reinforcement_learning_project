@@ -3,7 +3,6 @@ from RandomAgent import RandomAgent
 from DQNAgent import DQNAgent
 import matplotlib.pyplot as plt
 import os
-import torch
 import matplotlib.image as mpimg
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
@@ -40,7 +39,7 @@ def test_error_case(env):
 
 
 # Initialise skiing environment.
-env = Env('Skiing-v4')
+env = Env('Skiing-v4',frameskip=5)
 
 # Initialise agent using environment.
 agent = RandomAgent(env)
@@ -48,10 +47,10 @@ agent = RandomAgent(env)
 dqn_agent = DQNAgent(env=env, learning_rate=1e-3, sync_freq=5, replay_buffer_size=256)
 
 # Train agent.
-learning_stats = dqn_agent.train(200)
+learning_stats = dqn_agent.train(10000)
 print(learning_stats)
-#print("Saving trained model")
-#dqn_agent.save_trained_model("skiing-dqn.pth")
+print("Saving trained model")
+dqn_agent.save_trained_model("skiing-dqn-frameskipping-5.pth")
 
 # Load the agent mode
 # dqn_agent.load_pretrained_model("optimal-policy.pth")
@@ -70,5 +69,5 @@ plt.show()
 plt.plot(rand_avg_rew)
 plt.ylabel("Total reward random agent")
 plt.show()
-
+#agent.generateEpisode(render=True, frameskip=True)
 #env.observationIterationFETest()
