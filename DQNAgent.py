@@ -41,7 +41,7 @@ class DQNAgent:
         return
 
     def load_pretrained_model(self, model_path):
-        self.q_action_values_nn.load_state_dict(torch.load(model_path))
+        self.q_action_values_nn.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 
     def save_trained_model(self, model_path="cartpole-dqn.pth"):
         torch.save(self.q_action_values_nn.state_dict(), model_path)
@@ -268,7 +268,7 @@ class DQNAgent:
         while not terminal:
             # If been told to render, render before every action so user can see simulation.
             if render:
-                self.env.render()
+                self.env.gym_env.render()
             action = self.policy(p_features, epsilon)
             (n_features, p_objs), reward, terminal, info = self.env.step(action, p_objs)
             sum_of_reward = sum_of_reward + reward
