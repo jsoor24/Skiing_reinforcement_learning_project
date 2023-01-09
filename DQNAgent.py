@@ -268,7 +268,7 @@ class DQNAgent:
         print()
         for i in tqdm(range(ep_num)):
             try:
-                episode = self.generateEpisode(0.5, render)
+                episode = self.generateEpisode(0, render)
                 episode_rewards.append(episode[1])
                 print("Episode length:",len(episode[0]))
             except:
