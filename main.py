@@ -50,7 +50,7 @@ dqn_agent = DQNAgent(env=env, learning_rate=1e-3, sync_freq=5, replay_buffer_siz
 learning_stats = dqn_agent.train(100)
 print(learning_stats)
 print("Saving trained model")
-dqn_agent.save_trained_model("models/skiing-dqn-fixed-frameskipping-4-edited-CAP-100eps.pth")
+dqn_agent.save_trained_model("models/skiing-dqn-fixed-frameskipping-4-edited-CAP-ZEROVELOCITY-100eps.pth")
 
 # Load the agent mode
 # dqn_agent.load_pretrained_model("optimal-policy.pth")

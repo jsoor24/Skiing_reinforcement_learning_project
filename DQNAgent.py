@@ -191,6 +191,9 @@ class DQNAgent:
         if v_vel == 0:
             adjusted_reward -= 50
 
+        if v_vel == 0 and h_vel==0:
+            adjusted_reward -= 1000
+
         if -14 < h_dist < 14:
             adjusted_reward += 100
         else:

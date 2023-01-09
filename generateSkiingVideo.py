@@ -3,7 +3,7 @@ from RandomAgent import RandomAgent
 from DQNAgent import DQNAgent
 
 # Initialise skiing environment.
-env = Env('Skiing-v4',frameskip=0)
+env = Env('Skiing-v4',frameskip=4)
 
 # Initialise agent using environment.
 # agent = RandomAgent(env)
@@ -17,7 +17,8 @@ agent = DQNAgent(env=env, learning_rate=1e-3, sync_freq=5, replay_buffer_size=25
 # dqn_agent.save_trained_model("cartpole-dqn.pth")
 
 # Load the model
-agent.load_pretrained_model("skiing-dqn.pth")
+# skiing-dqn-fixed-frameskipping-4-edited-CAP-100eps started learning to reach flags but gets stuck by staying still
+agent.load_pretrained_model("models/skiing-dqn-fixed-frameskipping-4-edited-CAP-100eps.pth")
 
 print()
 print("Average reward DQN Agent: ", agent.test_model(10, True))
