@@ -142,7 +142,7 @@ class DQNAgent:
                 # observation = p_objs
                 sum_rewards += reward
                 p_features = n_features
-                buffer_idx += 1
+                buffer_idx += 0.8
 
                 # If capacity of replay buffer is half filled.
                 if (buffer_idx > (self.replay_buffer.maxlen / 2)):
@@ -151,8 +151,8 @@ class DQNAgent:
                         loss = self.trainNNs(batch_size=self.replay_buffer.maxlen / 4)
                         losses += loss
             # As we explore, reduce exploration to exploitation.
-            if epsilon > 0.1 and count>(training_episodes*0.6):
-                epsilon -= 0.04
+            if epsilon > 0.2 and count>(training_episodes*0.6):
+                epsilon -= 0.001
             losses_list.append(losses / ep_len), reward_list.append(sum_rewards), episode_len_list.append(
                 ep_len), epsilon_list.append(epsilon)
             count+=1
@@ -185,23 +185,27 @@ class DQNAgent:
         adjusted_reward = reward
         h_vel, v_vel, h_dist, v_dist, h_tree, v_tree= features
 
-        # if h_vel < -2 or h_vel > 2:
-        #     adjusted_reward -= 5
+        if h_vel==0:
+            adjusted_reward -= 10
 
-        if v_vel == 0:
+        if v_vel==0:
+            adjusted_reward -= 10
+
+        if h_vel==0 and v_vel==0:
             adjusted_reward -= 50
 
-        if v_vel == 0 and h_vel==0:
-            adjusted_reward -= 1000
+        # First is -10,-10,-50,+50,-50
+        # Second is -10,-10,-50,+500,-500
+        # Third is divide by 10 and -1,-1,-5,+5,-5
+        # Fourth is is -10,-10,-50, +50 when above flag and moving,-50
+        # 5th same as 4th but learning rate = 1e-2
 
-        if -14 < h_dist < 14:
-            adjusted_reward += 100
+        # Getting to flag is the most important behaviour
+        if -14 < h_dist < 14 and h_vel!=0 and v_vel!=0:
+            adjusted_reward += 50
         else:
             if(v_dist<50 and v_dist>0):
-                adjusted_reward -= 100
-            
-        if action == 0:
-            adjusted_reward -= 10
+                adjusted_reward -= 50
 
         return adjusted_reward
 
@@ -263,9 +267,12 @@ class DQNAgent:
         episode_rewards = []
         print()
         for i in tqdm(range(ep_num)):
-            episode = self.generateEpisode(0, render)
-            episode_rewards.append(episode[1])
-            print("Episode length:",len(episode[0]))
+            try:
+                episode = self.generateEpisode(0.5, render)
+                episode_rewards.append(episode[1])
+                print("Episode length:",len(episode[0]))
+            except:
+                continue
         return episode_rewards
 
     def generateEpisode(self, epsilon, render=False):
