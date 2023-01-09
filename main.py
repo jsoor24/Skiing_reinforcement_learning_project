@@ -55,9 +55,8 @@ def plotModelGraphs():
     agent_results["dqn_best"]=dqn_best.test_model(10)
     agent_results["dqn_left"]=dqn_left.test_model(10)
     agent_results["dqn_straight_down"]=dqn_straight_down.test_model(10)
-    agent_results["random_agent"]=dqn_straight_down.test_model(10)
-    dqn_avg_rew = dqn_agent.test_model(10)
-    rand_avg_rew = agent.test_model(20)
+    agent_results["random_agent"]=random_agent.test_model(10)
+    agent_results["human"]=
 
 
 
