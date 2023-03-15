@@ -1,3 +1,6 @@
+# Reinforcement Learning Algorithm to play Skiing atari game 
+
+
 # rl_group1
 Repo for Reinforcement Learning group 1 project.
 Requirements:
